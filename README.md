@@ -2,7 +2,11 @@
 
 
 [![CI](https://github.com/SimonHansul/AmphiDEB.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/SimonHansul/AmphiDEB.jl/actions/workflows/CI.yml)
+<<<<<<< HEAD
 [![codecov](https://codecov.io/gh/SimonHansul/AmphiDEB/graph/badge.svg?token=BL1CFR86M6)](https://codecov.io/gh/SimonHansul/AmphiDEB)
+=======
+[![codecov](https://codecov.io/gh/SimonHansul/AmphiDEB/graph/badge.svg?token=BL1CFR86M6)](https://codecov.io/gh/SimonHansul/AmphiDEB.jl)
+>>>>>>> 8436734 (Update README.md)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 
@@ -164,11 +168,3 @@ funded by the European Food Safety Authortiy (EFSA).
 
 - Perfrmance improvements, working towards allocation-free ODEs. 
     - Achieved minor performance improvements by using @inbounds (ca. 15% decrease in memory allocation).
-
-### v0.3.8
-
-- Small performance improvements
-
-### v0.4.0
-
-- Upgrade to Ecotoxsystems 0.3
