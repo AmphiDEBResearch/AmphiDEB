@@ -71,10 +71,14 @@ end
 
 function default_individual_rules!(
 <<<<<<< HEAD:src/AmphiDEB_M1/rules.jl
+<<<<<<< HEAD:src/AmphiDEB_M1/rules.jl
     a::EcotoxSystems.AbstractIndividual, 
 =======
     a::EcotoxSystems.Individual, 
 >>>>>>> 92b859b (restructured embryo and larva derivatives):src/individual_rules.jl
+=======
+    a::EcotoxSystems.AbstractDEBIndividual, 
+>>>>>>> 457feec (improved ODE performance):src/individual_rules.jl
     m::EcotoxSystems.IndividualBasedModel
     )::Nothing
 
