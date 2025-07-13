@@ -168,3 +168,7 @@ funded by the European Food Safety Authortiy (EFSA).
 
 - Perfrmance improvements, working towards allocation-free ODEs. 
     - Achieved minor performance improvements by using @inbounds (ca. 15% decrease in memory allocation).
+
+### v0.3.8
+
+- Small performance improvements
