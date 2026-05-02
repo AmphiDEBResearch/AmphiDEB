@@ -168,3 +168,7 @@ funded by the European Food Safety Authortiy (EFSA).
 ### v0.3.8
 
 - Small performance improvements
+
+### v0.4.0
+
+- Upgrade to Ecotoxsystems 0.3

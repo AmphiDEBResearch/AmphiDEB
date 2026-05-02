@@ -1,7 +1,7 @@
 name = "AmphiDEB"
 uuid = "eee04faf-3499-4765-a0c5-d172f1a51fe4"
+version = "0.4.0"
 authors = ["SimonHansul <simonhansul@gmail.com>"]
-version = "0.3.8"
 
 [deps]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
@@ -20,7 +20,7 @@ ComponentArrays = "0.15.17"
 DataFrames = "1.7.0"
 DataStructures = "0.18.20"
 Distributions = "0.25.113"
-EcotoxSystems = "0.2.3"
+EcotoxSystems = "0.3.1"
 OrdinaryDiffEq = "6.90.1"
 Parameters = "0.12.3"
 PrecompileTools = "1.2.1"

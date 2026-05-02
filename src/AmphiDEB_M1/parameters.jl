@@ -4,14 +4,19 @@ AmphiDEB global parameters with defaults.
 glb = ComponentVector(
     t_max = 56., # 8 - week simulation
     N0 = 1., # start with single value [] - only possible setting for ODE_simulator
-    dX_in = [20., 20.], # food input rate [mg d^-1] - assuming *ad libitum* feeding per default
-    k_V = [0., 0.], # dilution rate in the aquatic medium [V] - does not matter for ad libitum conditions
-    V_patch = [1., 1.], # simulated volume [d^-1] - does not matter for ad libitum conditions
-    T = 293.15, # ambient temperature [K]
-    C_W = [0.;], # exposure concentrations - currently only constant; given as a matrix. each row is a treatment, each column is a compound
+    dX_in_aq = 20., # food input rate aquatic [mg d^-1]
+    dX_in_ter = 20., # food input rate terrestric [mg d^-1]
+    k_V_aq = 0., 
+    k_V_ter = 0., # dilution rate in the aquatic medium [V] - does not matter for ad libitum conditions
+    V_patch_aq = 1., # simulated volume of the aquatic compartment; irrelevant for ad libitum conditions [L]
+    A_path_ter = 1., # simulated volume of the terrerstrict compartment; irrelevant for ad libitum conditions [m^2]
+    T_aq = 293.15, # ambient temperature aquatic [K]
+    T_ter = 293.15, # ambient temperature terrestric [K]
+    C_W1 = 0., # aquatic exposure concentration of substance 1 
+    C_W2 = 0., # aquatic exposure concentration of substance 2
     pathogen_inoculation_dose = 0., # amount of pathogen spores added to aquatic medium [# spores]
     pathogen_inoculation_time = 30., # time-point of pathogen inoculation [t]
-    medium_renewals = [0.] # time-points on which media renewals occur; results in removal of spores
+    medium_renewals = 0. # fixed time point at which media renewal occurs; results in removal of spores [d]
 )
 
 """
@@ -27,40 +32,13 @@ By default, we use the zoom factor `Z`, which is here defined as the ratio betwe
 For example, setting `Z = Normal(1, 0.1)` is equivalent to saying that there is a 10% variability in maximum structural masses around the population mean.
 Setting `Z = Dirac(1.)` is equivalent to turning off individual variability in this parameter.
 
-In contrast to the remaining parameters, the zoom factor does not directly appear in the model definition, 
-but its value propagates to other parameters. 
-
-These are listed in the meta-parameter `propagate_zoom`:
-
-```Julia
-propagate_zoom = ComponentVector( # parameters affected by zoom factor, and their scaling components
-        dI_max_emb = 1/3, # dI ∝ Z^(1/3)
-        dI_max_lrv = 1/3, 
-        dI_max_juv = 1/3, 
-        X_emb_int = 1., # X_emb ∝ Z 
-        H_j1 = 1., # H ∝ Z
-        H_p = 1., 
-        K_X_lrv = 1/3, # K_X = dI/F_max => K_X ∝ dI ∝ Z^(1/3) (F_max is maximum area-specific searching rate)
-        K_X_juv = 1/3
-    )
-```
-
-The listed values are the exponents which are applied to the zoom factor to correct the parameter.
-For example, the value for `dI_max_emb` is set to 1/3 because maximum structural mass (and therefore the zoom factor) scales with `dI_max_emb^(1/3)`, 
-as can be derived analytically from the model equilibria.
-
-Setting a value inside `propagate_zoom` to 0 is equivalent to de-coupling this parameter from the zoom factor altogether.
-
-Note that it is not possible to dynamically add or remove values to `propagate_zoom` (as is currently the case for any `ComponentVector`).
-
-
 References:
 
 Jager T (2022). DEBkiss. A simple framework for animal energy budgets. Version 3.0. Leanpub: https://leanpub.com/debkiss_book. <br>
 
 Pfab, F., DiRenzo, G. V., Gershman, A., Briggs, C. J., & Nisbet, R. M. (2020). Energy budgets for tadpoles approaching metamorphosis. Ecological Modelling, 436(109261). https://www.sciencedirect.com/science/article/pii/S0304380020303318?casa_token=FPLf-HB3htcAAAAA:CfmzTOsz0zdsCMHRVkJGXNGMY4vbO-sTzr-EPLjD5IzFZiihbAR9_2W6oySozMjzkbnAic3OqkGV
 """
-spc = ComponentVector(
+M1_spc = ComponentVector(
 
     #=
     Metaparameters
@@ -68,17 +46,7 @@ spc = ComponentVector(
 
 
     Z = Dirac(1.), # zoom factor
-    propagate_zoom = ComponentVector( # parameters affected by zoom factor, and their scaling components
-        dI_max_emb = 1/3, # dI ∝ Z^(1/3)
-        dI_max_lrv = 1/3, 
-        dI_max_juv = 1/3, 
-        X_emb_int = 1., # X_emb ∝ Z 
-        H_j1 = 1., # H ∝ Z
-        H_p = 1., 
-        K_X_lrv = 1/3, # K_X = dI/F_max => K_X ∝ dI ∝ Z^(1/3) (F_max is maximum area-specific searching rate)
-        K_X_juv = 1/3
-    ),
-       
+
     #=
     Physiological baseline (DEB) parameters
     =#
@@ -156,9 +124,39 @@ pth = ComponentVector(
     mu = harmmean([0.01 1.5]), # zoospore death rate
 )
 
-defaultparams = ComponentVector(
+M1_defaultparams = ComponentVector(
     glb = glb, # global parameters (forcings)
     pth = pth, # pathogen parameters (growth and infection dynamics)
     spc = spc # species-specific amphibian parameters (DEB + TKTD + pathogen effects)
 )
+
+
+
+"""
+Convert species-level parameters to individual-level parameters. 
+Samples from distributions when parameters are given as distributions. 
+Applies zoom factor. 
+"""
+function M1_individual_params(p::ComponentVector; kwargs...)
+    
+    ind = getval.(p.spc) |> 
+    x -> Float64.(x) |> 
+    x -> begin
+        x.dI_max_emb *= x.z^(1/3)
+        x.dI_max_lrv *= x.z^(1/3)
+        x.dI_max_juv *= x.z^(1/3)
+        x.X_emb_int *= x.z
+        # omit H_j1
+        x.H_p *= x.z
+        x.K_X_lrv *= x.z^(1/3)
+        x.K_X_juv *= x.z^(1/3)
+    end
+
+    return ComponentVector(
+        glb = p.glb, 
+        ind = ind, 
+        pth = p.pth; 
+        kwargs...
+    )
+end
 

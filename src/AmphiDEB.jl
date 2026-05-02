@@ -12,20 +12,21 @@ using ComponentArrays, StaticArrays
 using OrdinaryDiffEq
 using StatsBase
 
-include("default_params.jl") # default parameter sets
-include("derivatives_M1.jl") # derivatives of the default model
-include("derivatives_M2.jl") # derivatives of the default model
-include("statevars.jl") # setting up state variables
-include("individual_rules.jl") # individual rule-based component
-include("global_rules.jl") # global rule-based component
-include("simulators.jl") # functions to run run simulations
 
-include("traits.jl") # functions to infer traits from parameters or simulation output (e.g. maximum size, age at birth, etc.)
+include("AmphiDEB_M1/AmphiDEB_M1.jl")
+include("AmphiDEB_M1/parameters.jl")
+include("AmphiDEB_M1/statevars.jl")
+include("AmphiDEB_M1/derivatives.jl")
+include("AmphiDEB_M1/rules.jl")
+include("AmphiDEB_M1/traits.jl")
+
+
+
 include("utils.jl") # various auxiliary functions
 
 # to precompile the model, we simulate the default parameters
 @compile_workload begin
-    p = deepcopy(defaultparams)
+    p = deepcopy(params_M1)
 
     sim = @replicates ODE_simulator(p) 10
     

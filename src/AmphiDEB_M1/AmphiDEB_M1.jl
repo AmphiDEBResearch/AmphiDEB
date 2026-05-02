@@ -1,34 +1,64 @@
+abstract type AmphibianEnenergyBudget <: EcotoxSystems.AbstractEnergyBudget end
+
+Base.@kwdef mutable struct AmphibianEnergyBudget1  <: AmphibianEnenergyBudget
+    parameters::ComponentVector = parameters_M1
+end
+
+
+generate_individual_params(p) = EcotoxSystems.generate_individual_params(p; pth = p.pth)
 
 """
-    ODE_simulator(
-        p::ComponentVector; 
-        model = AmphiDEB_ODE_M1!, 
-        callbacks = AmphODE_callbacks(), 
-        statevars_init = initialize_statevars,
-        kwargs...
-        )
-A wrapper around the `EcotoxSystems.jl` ODE_simulator 
-for application with the AmphiDEB model.
+Simulate M1.
 """
-function ODE_simulator(
-    p::ComponentVector; 
-    model = M1_complete_ODE_with_loglogistic_TD!, 
-    callbacks = AmphODE_callbacks(), 
-    statevars_init = initialize_statevars,
-    gen_ind_params = p -> EcotoxSystems.generate_individual_params(p; pth = p.pth),
+function simulate(
+    model::AmphibianEnergyBudget1;
+    additional_callbacks = [],
     kwargs...
     )
 
-    EcotoxSystems.ODE_simulator(
-        p;
-        model = model,
-        statevars_init = statevars_init,
-        tstops = [p.glb.pathogen_inoculation_time, p.glb.medium_renewals...],
-        gen_ind_params = gen_ind_params,
-        callbacks = callbacks,
+    return EcotoxSystems.ODE_simulator(
+        model.parameters;
+        model = M1_complete_ODE_with_loglogistic_TD!,
+        statevars_init = initialize_statevars_M1,
+        tstops = [model.parameters.glb.pathogen_inoculation_time, model.parameters.glb.medium_renewals...],
+        gen_ind_params = M1_generate_individual_params,
+        callbacks = M1_callbacks(additional_callbacks...),
         kwargs...
     )
+
+
 end
+ 
+#"""
+#    ODE_simulator(
+#        p::ComponentVector; 
+#        model = AmphiDEB_ODE_M1!, 
+#        callbacks = AmphODE_callbacks(), 
+#        statevars_init = initialize_statevars,
+#        kwargs...
+#        )
+#A wrapper around the `EcotoxSystems.jl` ODE_simulator 
+#for application with the AmphiDEB model.
+#"""
+#function ODE_simulator(
+#    p::ComponentVector; 
+#    model = M1_complete_ODE_with_loglogistic_TD!, 
+#    callbacks = AmphODE_callbacks(), 
+#    statevars_init = initialize_statevars,
+#    gen_ind_params = p -> EcotoxSystems.generate_individual_params(p; pth = p.pth),
+#    kwargs...
+#    )
+#
+#    EcotoxSystems.ODE_simulator(
+#        p;
+#        model = model,
+#        statevars_init = statevars_init,
+#        tstops = [p.glb.pathogen_inoculation_time, p.glb.medium_renewals...],
+#        gen_ind_params = gen_ind_params,
+#        callbacks = callbacks,
+#        kwargs...
+#    )
+#end
 
 """
     IBM_simulator(
