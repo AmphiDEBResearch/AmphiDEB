@@ -11,16 +11,21 @@ using ComponentArrays, StaticArrays
 using OrdinaryDiffEq
 using StatsBase
 
-module FittingUtils
-    using EcotoxSystems,EcotoxModelFitting
-    using ComponentArrays
 
-    using DataFrames, CSV
-    using Latexify
-    using Distributions
-    using Chain
+include("AmphiDEB_M1/AmphiDEB_M1.jl")
+include("AmphiDEB_M1/parameters.jl")
+include("AmphiDEB_M1/statevars.jl")
+include("AmphiDEB_M1/derivatives.jl")
+include("AmphiDEB_M1/rules.jl")
+include("AmphiDEB_M1/traits.jl")
 
-    import EcotoxModelFitting: Hyperdist
+
+
+include("utils.jl") # various auxiliary functions
+
+# to precompile the model, we simulate the default parameters
+@compile_workload begin
+    p = deepcopy(params_M1)
 
     include("FittingUtils/losses.jl")
     include("FittingUtils/utils.jl")
