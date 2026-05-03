@@ -1,7 +1,7 @@
 birth_condition(u, t, integrator) = u.ind.X_emb
 function birth_affect!(integrator)
     integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_juvenile = 1.
+    integrator.u.ind.is_larva = 1.
     integrator.u.ind.is_metamorph = 0.
     integrator.u.ind.is_juvenile = 0.
     integrator.u.ind.is_adult = 0.
@@ -14,8 +14,9 @@ birth = ContinuousCallback(
     )
 
 function metamorphosis_condition(u, t, integrator)
-    u.ind.H - integrator.p.ind.H_j # NOTE: for chemical effects, make sure that the effect is applied on H_j here
+    u.ind.H - integrator.p.ind.H_j1 # NOTE: for chemical effects, make sure that the effect is applied on H_j1 here
 end
+
 function metamorphosis_affect!(integrator)
     integrator.u.ind.is_embryo = 0.
     integrator.u.ind.is_larva = 0.
@@ -30,8 +31,9 @@ metamorphosis = ContinuousCallback(
 )
 
 function froglet_emergence_condition(u, t, integrator)
-    (u.ind.E_mt <= 0) && (u.ind.H >= p.ind.H_j) && (u.ind.H < p.ind.H_p)
+    (u.ind.E_mt <= 0) && (u.ind.H >= integrator.p.ind.H_j1) && (u.ind.H < integrator.p.ind.H_p)
 end
+
 function froglet_emergence_affect!(integrator)
     integrator.u.ind.is_embryo = 0.
     integrator.u.ind.is_larva = 0.
@@ -147,22 +149,24 @@ end
 
 
 function larva!(du, u, p, t; 
+    y_G = 1., y_GP = 1.,
     y_M = 1., y_MP = 1.,
     y_A = 1., y_AP = 1.
     )::Nothing
 
-    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A. K_X_aq = p.ind
-    @unpack T, V_patch_aq = p.glb
+    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
+    @unpack T_aq, V_patch_aq = p.glb
     @unpack X_aq = u.glb
+    @unpack S, H = u.ind
 
-    yT = y_T(T_A, T_ref, T)
-    fX = f_X(X_aq, V_patch_aq, K_X_aq)
-    kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T)
+    yT = y_T(T_A, T_ref, T_aq)
+    fX = f_X(X_aq, V_patch_aq, K_X_lrv)
+    kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq)
 
     dI = fX * dI_max_lrv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
-    dM = S * k_M * y_M * y_MP * y_T
-    dJ = H * k_J * y_M * y_MP * y_T
+    dM = S * k_M_emb * y_M * y_MP * yT
+    dJ = H * k_J_emb * y_M * y_MP * yT
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
@@ -171,15 +175,15 @@ function larva!(du, u, p, t;
     )
 
     dE_mt = Base.ifelse(
-        (kappa * dA) > dM, 
-        eta_AS * y_G * y_G_P * gamma * (kappa * dA - dM),
-        -(dM / eta_SA - (1 - gamma) * kappa * dA)/delta_E
+        (kappa_T * dA) > dM, 
+        eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM),
+        -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
     )
 
     dE_mt_max = dE_mt
+    dH = max(0, (1 - kappa_T) * dA - dJ)
 
-    dH = max(0, (1 - kappa) * dA - dJ)
-
+    du.glb.X_aq = -dI
     du.ind.X_emb = 0.
     du.ind.I = dI
     du.ind.A = dA
@@ -187,7 +191,7 @@ function larva!(du, u, p, t;
     du.ind.J = dJ
     du.ind.S = dS
     du.ind.E_mt = dE_mt
-    du.ind.dE_mt_max = dE_mt_max
+    du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
 
@@ -195,7 +199,46 @@ function larva!(du, u, p, t;
 end
 
 
-function metamorph!(du, u, p, t)::Nothing
+function metamorph!(
+    du, u, p, t;
+    y_G = 1, y_GP = 1,
+    y_M = 1, y_MP = 1,
+    y_A = 1, y_AP = 1,
+    )::Nothing
+
+    @unpack T_aq, V_patch_aq = p.glb
+    @unpack dI_max_lrv, eta_IA, eta_AS_emb, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, delta_E, delta_k_M_mt, T_A = p.ind
+    @unpack X_aq = u.glb
+    @unpack E_mt, E_mt_max, S, H = u.ind
+
+    kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq)
+    k_M = k_M_emb * delta_k_M_mt 
+    yT = y_T(T_A, T_ref, T_aq)
+    fX = f_X(X_aq, V_patch_aq, K_X_lrv)
+
+    S = max(1e-10, S)
+
+    dI = fX * dI_max_lrv * (E_mt/E_mt_max) * S^(2/3) * yT
+    dA = dI * eta_IA * y_A * y_AP
+    dM = S * k_M * y_M * y_MP * yT
+    dJ = H * k_J_emb * y_M * y_MP * yT
+    dS = eta_AS_emb * y_G * y_GP * dA
+    dH = max(0, ((1 - kappa_T) * dM) / kappa_T - dJ)
+    dE_mt = -(dH + dJ + dM)/delta_E
+    
+    @show fX S dS eta_AS_emb dA
+
+    du.glb.X_aq = -dI
+    du.ind.X_emb = 0.
+    du.ind.I = dI
+    du.ind.A = dA
+    du.ind.M = dM
+    du.ind.S = dS
+    du.ind.H = dH
+    du.ind.J = dJ
+    du.ind.R = 0.
+    du.ind.E_mt = dE_mt
+    du.ind.E_mt_max = 0.
 
     return nothing
 end
@@ -209,4 +252,37 @@ end
 function adult!(du, u, p, t)::Nothing
 
     return nothing
+end
+
+function sim_embryo(p)
+
+    p_ind = Model1.generate_individual_params(p)
+    u0 = Model1.initialize_statevars(p_ind)
+    tspan = (0,p.glb.t_max)
+
+    prob = ODEProblem(embryo!, u0, tspan, p_ind)
+    sol = solve(prob, callback = Model1.callback_set)
+
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+end
+
+function sim_larva(p_ind, u0)
+
+
+end
+
+function du!(du, u, p, t)
+    global!(du.glb, u.glb, p.glb, t)
+
+    if u.ind.is_embryo>0 
+        embryo!(du, u, p, t)
+    end
+
+    if u.ind.is_larva>0 
+        larva!(du, u, p, t)
+    end
+
+    if u.ind.is_metamorph>0
+        metamorph!(du, u, p, t)
+    end
 end
