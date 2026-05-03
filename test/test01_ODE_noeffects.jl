@@ -23,6 +23,12 @@ AmphiDEB.ODE_simulator(AmphiDEB.defaultparams);
 
 VSCodeServer.@profview_allocs AmphiDEB.ODE_simulator(AmphiDEB.defaultparams)
 
+using Revise
+using AmphiDEB
+p = deepcopy(AmphiDEB.defaultparams)
+
+using AmphiDEB.OrdinaryDiffEq
+sim = AmphiDEB.ODE_simulator(p, alg = Rodas4P())
 
 function run_basetest(m; pmod = p->p)
 

@@ -25,7 +25,7 @@ function ODE_simulator(
         statevars_init = statevars_init,
         tstops = [p.glb.pathogen_inoculation_time, p.glb.medium_renewals...],
         gen_ind_params = gen_ind_params,
-        callbacks = callbacks,
+        callback = callbacks,
         kwargs...
     )
 end

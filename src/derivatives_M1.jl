@@ -468,21 +468,11 @@ Following rules of the standard DEBkiss model, embryonic state is maintained unt
     beta::Real = 1e3
     )::Real
 
-    return sig(X_emb, 0., 0., 1., beta = beta)
+    return Base.ifelse(X_emb > 0, 1., 0)
 
 end
 
 """
-    is_larva(
-        X_emb::Real,
-        H::Real,
-        H_j1::Real,
-        y_H_neg::Real, 
-        y_H_pos::Real;
-        beta1::Real = 1e3,
-        beta2::Real = 1e7
-        )::Real
-
 Determine wheter an individual is in larval state, returning life stage indicator as float. 
 Larvae are all non-embryos whose maturity is below the threshold for metamorphosis `H_j1`. 
 The timing of `H_j1` will often be aligned with Gosner stage 42 for anurans, but might ocurr earlier. 
@@ -493,26 +483,14 @@ The decisive factor is the decline in feeding rates.
     H::Real,
     H_j1::Real,
     y_H_neg::Real, 
-    y_H_pos::Real;
-    beta1::Real = 1e3,
-    beta2::Real = 1e7
+    y_H_pos::Real
     )::Real
 
-    return sig(X_emb, 0., 1., 0., beta = beta1) * sig(H, H_j1 * y_H_neg * y_H_pos, 1., 0., beta = beta2)
+    return Base.ifelse((X_emb <= 0) && (H < H_j1 * y_H_neg * y_H_pos), 1., 0.)
 
 end
 
 """
-    is_metamorph(
-        H::Real, 
-        H_j1::Real, 
-        y_H_neg::Real,
-        y_H_pos::Real,
-        E_mt::Real;
-        beta1::Real = 1e7, 
-        beta2::Real = 1e3, 
-        )::Real
-
 Determine wheter an individual is in metamorph state, returning life stage indicator as float.
 Metamorphs have a maturity level above ``H_j1`, and their metamorphic reserve `E_mt` is not emptied yet.
 """
@@ -521,12 +499,10 @@ Metamorphs have a maturity level above ``H_j1`, and their metamorphic reserve `E
     H_j1::Real, 
     y_H_neg::Real,
     y_H_pos::Real,
-    E_mt::Real;
-    beta1::Real = 1e7, 
-    beta2::Real = 1e3, 
+    E_mt::Real
     )::Real
 
-    return sig(H, H_j1 * y_H_neg * y_H_pos, 0., 1., beta = beta1) * sig(E_mt, 0., 0., 1., beta = beta2) 
+    return Base.ifelse((H >= H_j1 * y_H_neg * y_H_pos) && (E_mt > 0), 1., 0.) 
 
 end
 
@@ -552,13 +528,10 @@ Juveniles are individuals with a maturity level between `H_j1` and `H_p` whose m
     y_H_neg::Real,
     y_H_pos::Real,
     E_mt::Real,
-    H_p::Real;
-    beta1 = 1e3,
-    beta2 = 1e3,
-    beta3 = 1e3
+    H_p::Real
     )::Real
 
-    return sig(H, H_j1 * y_H_neg * y_H_pos, 0., 1., beta = beta1) * sig(E_mt, 0., 1., 0., beta = beta2) * sig(H, H_p, 1., 0., beta = beta3)
+    return Base.ifelse((H >= H_j1 * y_H_neg * y_H_pos) && (E_mt <= 0) && (H < H_p), 1., 0.)
 
 end
 
@@ -578,7 +551,7 @@ Adults are individuals with a maturity level above the puberty threshold `H_p`.
     beta = 1e3
     )::Real
 
-    return sig(H, H_p, 0., 1., beta = beta)
+    return Base.ifelse(H >= H_p, 1., 0.)
 
 end
 
@@ -1123,7 +1096,7 @@ Reproduction rate, including response to chemicals `y_R` and pathogens (`y_RP`).
     dJ::Real
     )::Real
 
-    return adult * clipneg(eta_AR * y_R * y_RP * ((1 - kappa) * dA - dJ))
+    return adult * max(0, eta_AR * y_R * y_RP * ((1 - kappa) * dA - dJ))
 
 end
 
@@ -1162,11 +1135,10 @@ including response to chemicals (`y_G`) and pathogens (`y_GP`).
     eta_AS::Real
     )::Real
 
-    return sig( 
-        kappa * dA, 
-        dM, 
+    return Base.ifelse( 
+        kappa * dA >= dM, 
+        y_G * y_GP * eta_AS * (kappa * dA - dM),
         -(dM / eta_SA - kappa * dA), 
-        y_G * y_GP * eta_AS * (kappa * dA - dM) 
     )    
 
 end
@@ -1407,7 +1379,7 @@ Maturation rate following standard DEBkiss model.
     dJ::Real
     )::Real
 
-    return clipneg((1 - kappa) * dA - dJ)
+    return max(0, (1 - kappa) * dA - dJ)
 
 end
 
@@ -1426,7 +1398,7 @@ Maturation rate for metamorphs, calculated from the κ-rule and assuming that so
     dJ::Real
     )::Real
 
-    return clipneg((1 - kappa) * dM) / kappa - dJ
+    return max(0, ((1 - kappa) * dM) / kappa - dJ)
 
 end
 
