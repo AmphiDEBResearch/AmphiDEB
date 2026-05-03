@@ -1,9 +1,15 @@
- 
-if isinteractive()
-    using Pkg; Pkg.activate(@__DIR__)
-    Pkg.develop(path = joinpath("lib", "AmphiDEB"))
+if !isinteractive()
+    using Pkg; Pkg.activate("test")
 end
 
+if isinteractive()
+    using Pkg; Pkg.activate("lib/AmphiDEB.jl/test")
+end
+
+using Pkg; Pkg.develop(path="lib/AmphiDEB.jl")
+
+Pkg.instantiate()
+Pkg.resolve()
 
 using Test
 using Plots, StatsPlots, Plots.Measures
