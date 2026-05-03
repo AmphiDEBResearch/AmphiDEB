@@ -16,6 +16,7 @@ function simulate(
     kwargs...
     )
 
+<<<<<<< HEAD:src/AmphiDEB_M1/AmphiDEB_M1.jl
     return EcotoxSystems.ODE_simulator(
         model.parameters;
         model = M1_complete_ODE_with_loglogistic_TD!,
@@ -23,6 +24,15 @@ function simulate(
         tstops = [model.parameters.glb.pathogen_inoculation_time, model.parameters.glb.medium_renewals...],
         gen_ind_params = M1_generate_individual_params,
         callbacks = M1_callbacks(additional_callbacks...),
+=======
+    EcotoxSystems.ODE_simulator(
+        p;
+        model = model,
+        statevars_init = statevars_init,
+        tstops = [p.glb.pathogen_inoculation_time, p.glb.medium_renewals...],
+        gen_ind_params = gen_ind_params,
+        callback = callbacks,
+>>>>>>> 92b859b (restructured embryo and larva derivatives):src/simulators.jl
         kwargs...
     )
 

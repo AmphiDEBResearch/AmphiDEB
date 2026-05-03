@@ -66,17 +66,19 @@ end
 function initialize_global_statevars(p)
     return ComponentVector(
         N = 0, 
-        X = [1e10,1e10],
-        C_W = [0., 0.],
-        aging_mortality = 0,
-        starvation_mortality = 0,
-        GUTS_mortality = 0,
+        X_aq = p.glb.dX_in_aq,
+        X_ter = p.glb.dX_in_ter,
+        C_W1 = 0., 
+        C_W2 = 0.,
         P_Z = 0,
         N_emb = 0,
         N_lrv = 0,
         N_mt = 0,
         N_juv = 0,
-        N_ad = 0
+        N_ad = 0,
+        aging_mortality = 0, # cumulative mortalities (only tracked in population modelling)
+        starvation_mortality = 0,
+        GUTS_mortality = 0,
     )
 end
 
