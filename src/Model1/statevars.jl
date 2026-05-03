@@ -26,11 +26,11 @@ function initialize_individual_statevars(
     )::ComponentVector
 
     return ComponentVector(
-        embryo = 1.,
-        larva = 0, # additional life stage: larva
-        metamorph = 0, # additional life stage: metamorph
-        juvenile = 0.,
-        adult = 0.,
+        is_embryo = 1.,
+        is_larva = 0, # additional life stage: larva
+        is_metamorph = 0, # additional life stage: metamorph
+        is_juvenile = 0.,
+        is_adult = 0.,
 
         X_emb = p.ind.X_emb_int, # initial mass of vitellus
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
