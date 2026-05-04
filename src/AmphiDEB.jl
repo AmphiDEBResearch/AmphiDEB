@@ -38,7 +38,7 @@ const ODE_simulator = Model1.sim_all # old "ODE_simulator" is an alias for the n
 
 include("individual_rules.jl") # individual rule-based component
 include("global_rules.jl") # global rule-based component
-include("simulators.jl") # functions to run run simulations
+#include("simulators.jl") # functions to run run simulations
 include("traits.jl") 
 
 include("utils.jl") # various auxiliary functions
@@ -48,12 +48,7 @@ include("utils.jl") # various auxiliary functions
     p = deepcopy(defaultparams)
 
     sim = @replicates ODE_simulator(p) 10
-    
-    p.glb.t_max = 365.
-    p.glb.dX_in = [500., 500.]
-    p.spc.tau_R = 30.
-    
-    sim = IBM_simulator(p)
+   
 end
 
 end # module AmphiDEB

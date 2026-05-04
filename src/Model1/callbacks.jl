@@ -1,10 +1,10 @@
 birth_condition(u, t, integrator) = u.ind.X_emb
 function birth_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 1.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 0.
+    integrator.u.ind.embryo = 0.
+    integrator.u.ind.larva = 1.
+    integrator.u.ind.metamorph = 0.
+    integrator.u.ind.juvenile = 0.
+    integrator.u.ind.adult = 0.
 end
 
 function birth_affect_terminal!(integrator)
@@ -28,11 +28,11 @@ function metamorphosis_condition(u, t, integrator)
 end
 
 function metamorphosis_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 1.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 0.
+    integrator.u.ind.embryo = 0.
+    integrator.u.ind.larva = 0.
+    integrator.u.ind.metamorph = 1.
+    integrator.u.ind.juvenile = 0.
+    integrator.u.ind.adult = 0.
 end
 
 function metamorphosis_affect_terminal!(integrator)
@@ -55,11 +55,11 @@ function froglet_emergence_condition(u, t, integrator)
 end
 
 function froglet_emergence_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 1.
-    integrator.u.ind.is_adult = 0.
+    integrator.u.ind.embryo = 0.
+    integrator.u.ind.larva = 0.
+    integrator.u.ind.metamorph = 0.
+    integrator.u.ind.juvenile = 1.
+    integrator.u.ind.adult = 0.
 end
 
 function froglet_emergence_affect_terminal!(integrator)
@@ -80,11 +80,11 @@ froglet_emergence_terminal = ContinuousCallback(
 puberty_condition(u, t, integrator) = u.ind.H - integrator.p.ind.H_p
 
 function puberty_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 1.
+    integrator.u.ind.embryo = 0.
+    integrator.u.ind.larva = 0.
+    integrator.u.ind.metamorph = 0.
+    integrator.u.ind.juvenile = 0.
+    integrator.u.ind.adult = 1.
 end
 
 function puberty_affect_terminal!(integrator)
