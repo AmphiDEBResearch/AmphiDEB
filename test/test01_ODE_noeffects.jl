@@ -1,4 +1,3 @@
-using Pkg; Pkg.activate("test")
 using Test
 using Distributions
 using OrdinaryDiffEq
@@ -8,31 +7,86 @@ default(leg = false, lw = 1.5)
 
 include("testutils.jl")
 
+
+# ======================================== #
+# Submodule setup
+# ======================================== #
+
+using AmphiDEB, AmphiDEB.Model1
+using EcotoxSystems
+using StatsPlots
 using DataFrames, DataFramesMeta
 using StatsBase
 
-using Revise
+begin # embryo
+    p = deepcopy(Model1.params)
+    sim_emb, u0lrv, p_ind = Model1.sim_embryo(p)
+    @test abs(sim_emb.X_emb[end]) ≈ 0 atol = 1e-3
+end
 
-@time import AmphiDEB: defaultparams, ODE_simulator
-using AmphiDEB
-using EcotoxSystems
+begin # larva
+    sim_lrv, u0mt, p_ind = Model1.sim_larva(p_ind, u0lrv)
+    @test sim_lrv.H[end] ≈ p.spc.H_j1    
+end
 
+<<<<<<< HEAD
 #using BenchmarkTools
 #AmphiDEB.ODE_simulator(AmphiDEB.defaultparams);
 #@benchmark AmphiDEB.ODE_simulator(AmphiDEB.defaultparams)
 #
 #VSCodeServer.@profview_allocs AmphiDEB.ODE_simulator(AmphiDEB.defaultparams)
+=======
+begin # metamorph
+    sim_mt, u0juv, p_ind = Model1.sim_metamorph(p_ind, u0mt)
+    @df sim_mt plot(:t, [:S :E_mt :I], layout = (1,3), marker = true, leg = false)
+    @test sim_mt.E_mt[end] ≈ 0. atol = 1e-3
+end
 
-using Revise
-using AmphiDEB
-p = deepcopy(AmphiDEB.defaultparams)
+begin # juvenile 
+    sim_juv, u0ad, p_ind = Model1.sim_juvenile(p_ind, u0juv)
+    @df sim_juv plot(:t, :H)
+    sim_juv.H[end] ≈ p_ind.ind.H_p
+    sim_juv.R[end] == 0.
+end
+>>>>>>> accb043 (completed new sim_all function and introduced aliases for backwards-compatibility)
+
+using Infiltrator
+
+begin # adult
+    p_ind.glb.t_max = 365. * 10 # we use high t_max to check for solver instabilities when kappa*dA ≈ dM
+    sim_ad, uend, p_ind = Model1.sim_adult(p_ind, u0ad)
+    @df sim_ad plot(:t, [:S :H :R], layout = (1,3), marker = true)
+    
+    @test unique(diff(sim_ad.H)) == [0.] # maturation should stop
+    @test sum(diff(sim_ad.S) .<= 0) == 0 # growth should continue
+    @test sim_ad.R[1] == 0. # repro should start at 0
+    @test sum(diff(sim_ad.R) .<= 0) == 0 # repro buffer should grow continuously 
+end
+
+
+begin # all
+    @time sim = Model1.sim_all(p, saveat = 1)
+    @test sum(diff(sim.t) .< 0) == 0 # check that concatenation of time vectors is plausible
+
+    @df sim plot(:t, [:S :H :E_mt :R], layout = (2,2))
+end
+
+
+#using BenchmarkTools
+#Model1.sim_all(p); @benchmark Model1.sim_all(p)
+#
+
+# ======================================== #
+# Previous setup without submodules
+# - kept for backwards compatability 
+# ======================================== #
 
 using AmphiDEB.OrdinaryDiffEq
-sim = AmphiDEB.ODE_simulator(p, alg = Rodas4P())
+sim = AmphiDEB.ODE_simulator(p)
 
 function run_basetest(m; pmod = p->p)
 
-    global p = deepcopy(defaultparams)
+    global p = deepcopy(Model1.params)
 
     p.glb.t_max = 365*2
     p.glb.pathogen_inoculation_time = Inf
@@ -44,7 +98,7 @@ function run_basetest(m; pmod = p->p)
 
     p = pmod(p) # optional modification of parameters
 
-    @time global sim = AmphiDEB.ODE_simulator(
+    @time global sim =  (
             p, 
             reltol = 1e-10,
             model = m,
@@ -196,15 +250,11 @@ end
 
 end
 
+using Distributions
+
 @testset "Randomized parameters" begin
     
-    global p = deepcopy(defaultparams)
-
-    p.glb.t_max = 365*2
-    p.glb.pathogen_inoculation_time = Inf
-    p.glb.dX_in = [20., 20.]
-
-
+    global p = deepcopy(Model1.params)
     p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
     p.spc.k_M_emb = truncated(Normal(0.11, 0.011), 0, Inf)
     p.spc.eta_AR = truncated(Normal(0.95, 0.095), 0, 1)
@@ -212,10 +262,9 @@ end
 
     S_max_anl = AmphiDEB.calc_S_max_juv(p.spc)
 
-    @time global sim = @replicates AmphiDEB.ODE_simulator(
+    @time global sim = @replicates Model1.sim_all(
             p, 
-            saveat = 1,
-            alg = Tsit5()
+            saveat = 1
             ) 10
 
     sim[!,:E_mt_rel] = sim.E_mt ./ (sim.S + sim.E_mt)
