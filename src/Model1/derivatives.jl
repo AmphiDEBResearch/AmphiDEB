@@ -421,7 +421,7 @@ function sim_all(p; kwargs...)
     sim_juv[!,:t] = sim_juv.t .+ sim_mt.t[end]
     sim_ad[!,:t] = sim_ad.t .+ sim_juv.t[end]
     
-    return vcat(sim_lrv, sim_mt, sim_juv, sim_ad)
+    return vcat(sim_emb, sim_lrv, sim_mt, sim_juv, sim_ad)
 end
 
 
