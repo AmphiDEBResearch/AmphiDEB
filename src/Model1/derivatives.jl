@@ -1,14 +1,14 @@
 """
-ODE component for behaviour of lgobal variables. 
-Controls influx/outflux (background mortality) of resource.
+ODE component for food dynamics with simple first-order kinetics.
+Disengaged for `p.glb.food_dynamic = 0.`
 """
-function global!(du, u, p, t)::Nothing
+function food_dynamics_firstorder!(du, u, p, t)::Nothing
     
-    @unpack dX_in_aq, k_V_aq, dX_in_ter, k_V_ter = p
+    @unpack dX_in_aq, k_V_aq, dX_in_ter, k_V_ter, food_dynamic = p
     @unpack X_aq, X_ter = u
 
-    du.X_aq = dX_in_aq - k_V_aq * X_aq 
-    du.X_ter = dX_in_ter - k_V_ter * X_ter 
+    du.X_aq = food_dynamic * (dX_in_aq - k_V_aq * X_aq)
+    du.X_ter = food_dynamic * (dX_in_ter - k_V_ter * X_ter )
 
     return nothing 
 end
@@ -21,9 +21,7 @@ One-parameter Arrhenius temperature correction.
     T_ref::Real,
     T::Real
     )::Real
-
     return exp((T_A / T_ref) - (T_A / T))
-
 end
 
 """
@@ -41,9 +39,7 @@ Scaled functional response `f_X` based on Holling Type II functional response.
     V_patch::Real,
     K_X::Real
     )::Real
-
     return (X / V_patch) / ((X / V_patch) + K_X)
-
 end
 
 @inline function calc_S_max(
@@ -52,9 +48,7 @@ end
     kappa::Real, 
     k_M::Real
     )::Real
-
     return ((dI_max*eta_IA*kappa)/k_M)^3
-
 end
 
 """
@@ -67,8 +61,8 @@ function embryo!(
     y_A = 1., y_AP = 1.
     )::Nothing
 
+    @unpack T_aq, food_dynamic = p.glb
     @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb = p.ind
-    @unpack T_aq = p.glb
     @unpack S, H = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
@@ -103,14 +97,16 @@ function larva!(du, u, p, t;
     y_A = 1., y_AP = 1.
     )::Nothing
 
-    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
-    @unpack T_aq, V_patch_aq = p.glb
+    @unpack T_aq, V_patch_aq, food_dynamic = p.glb
+    @unpack Z, dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
     @unpack X_aq = u.glb
-    @unpack S, H = u.ind
+    @unpack S, H, E_mt = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq)
+
+    S = max(0, S)
 
     dI = fX * dI_max_lrv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
@@ -119,9 +115,10 @@ function larva!(du, u, p, t;
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        y_G * y_GP * eta_AS_emb * (kappa_T * dA - dM),
+        y_G * y_GP * eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM),
         -(dM / eta_SA - kappa_T * dA)
     )
+
 
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
@@ -132,7 +129,8 @@ function larva!(du, u, p, t;
     dE_mt_max = dE_mt
     dH = max(0, (1 - kappa_T) * dA - dJ)
 
-    du.glb.X_aq = -dI
+    du.glb.X_aq -= dI
+    du.glb.X_ter = 0.
     du.ind.X_emb = 0.
     du.ind.I = dI
     du.ind.A = dA
@@ -157,7 +155,7 @@ function metamorph!(
     y_A = 1, y_AP = 1,
     )::Nothing
 
-    @unpack T_aq, V_patch_aq = p.glb
+    @unpack T_aq, V_patch_aq, food_dynamic = p.glb
     @unpack dI_max_lrv, eta_IA, eta_AS_emb, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, delta_E, delta_k_M_mt, T_A = p.ind
     @unpack X_aq = u.glb
     @unpack E_mt, E_mt_max, S, H = u.ind
@@ -177,7 +175,8 @@ function metamorph!(
     dH = max(0, ((1 - kappa_T) * dM) / kappa_T - dJ)
     dE_mt = -(dH + dJ + dM)/delta_E
     
-    du.glb.X_aq = -dI
+    du.glb.X_aq -= (food_dynamic * dI)
+    du.glb.X_ter = 0.
     du.ind.X_emb = 0.
     du.ind.I = dI
     du.ind.A = dA
@@ -203,7 +202,7 @@ function juvenile!(
     y_M = 1., y_MP = 1.,
     )::Nothing
 
-    @unpack T_ter, A_patch_ter = p.glb
+    @unpack T_ter, A_patch_ter, food_dynamic = p.glb
     @unpack X_ter = u.glb
 
     @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
@@ -224,6 +223,8 @@ function juvenile!(
     )    
     dH =  max(0, (1 - kappa_T) * dA - dJ)
 
+    du.glb.X_aq = 0.
+    du.glb.X_ter -= (food_dynamic * dI)
     du.ind.X_emb = 0.
     du.ind.E_mt = 0.
     du.ind.E_mt_max = 0.
@@ -248,7 +249,7 @@ function adult!(du, u, p, t;
     y_R = 1., y_MR = 1.
     )::Nothing
     
-    @unpack T_ter, A_patch_ter = p.glb
+    @unpack food_dynamic, T_ter, A_patch_ter = p.glb
     @unpack X_ter = u.glb
 
     @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, eta_AR, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
@@ -258,10 +259,6 @@ function adult!(du, u, p, t;
     yT = y_T(T_A, T_ref, T_ter)
     fX = f_X(X_ter, A_patch_ter, K_X_juv) 
 
-    if S <0 
-        @show t S
-    end
-
     dI = fX * dI_max_juv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
     dM = S * k_M_juv * y_M * y_MP * yT
@@ -270,6 +267,7 @@ function adult!(du, u, p, t;
 
     dR =  eta_AR * y_R * y_MR * ((1 - kappa_T) * dA - dJ)
     
+    du.glb.X_ter -= (dI * food_dynamic)
     du.ind.X_emb = 0.
     du.ind.E_mt = 0.
     du.ind.E_mt_max = 0.
@@ -288,7 +286,7 @@ end
 ODE system for embryos including global component.
 """
 function sys_embryo!(du, u, p, t)::Nothing
-    global!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
     embryo!(du, u, p, t)
 end
 
@@ -296,7 +294,7 @@ end
 ODE system for larvae including global component.
 """
 function sys_larva!(du, u, p, t)::Nothing
-    global!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
     larva!(du, u, p, t)
 end
 
@@ -304,7 +302,7 @@ end
 ODE system for metamorphs including global component.
 """
 function sys_metamorph!(du, u, p, t)::Nothing
-    global!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
     metamorph!(du, u, p, t)
 end
 
@@ -312,7 +310,7 @@ end
 ODE system for juveniles including global component.
 """
 function sys_juvenile!(du, u, p, t)::Nothing
-    global!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
     juvenile!(du, u, p, t)
 end
 
@@ -320,7 +318,7 @@ end
 ODE system for adults including global component.
 """
 function sys_adult!(du, u, p, t)::Nothing
-    global!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
     adult!(du, u, p, t)
 end
 
@@ -403,22 +401,33 @@ Simulate all life stages consecutively as separate ODE systems.
 function sim_all(p; kwargs...)
 
     sim_emb, u0lrv, p_ind = sim_embryo(p; kwargs...)
-    @assert sim_emb.t[end] < p.glb.t_max
+
+    if sim_emb.t[end] >= p.glb.t_max
+        return sim_emb
+    end
     
     sim_lrv, u0mt, p_ind = sim_larva(p_ind, u0lrv; kwargs...)
-    @assert sim_lrv.t[end] < p.glb.t_max
+    sim_lrv[!,:t] = sim_lrv.t .+ sim_emb.t[end]
+
+    if sim_lrv.t[end] >= p.glb.t_max
+        return vcat(sim_emb, sim_lrv)
+    end
 
     sim_mt, u0juv, p_ind = sim_metamorph(p_ind, u0mt; kwargs...)
-    @assert sim_mt.t[end] < p.glb.t_max
+    sim_mt[!,:t] = sim_mt.t .+ sim_lrv.t[end]
+
+    if sim_mt.t[end] >= p.glb.t_max
+        return vcat(sim_emb, sim_lrv, sim_mt)
+    end
 
     sim_juv, u0ad, p_ind = sim_juvenile(p_ind, u0juv; kwargs...)
-    @assert sim_juv.t[end] < p.glb.t_max
+    sim_juv[!,:t] = sim_juv.t .+ sim_mt.t[end]
+    
+    if sim_juv.t[end] >= p.glb.t_max
+        return vcat(sim_emb, sim_lrv, sim_mt, sim_juv)
+    end
 
     sim_ad, uend, p_ind = sim_adult(p_ind, u0ad; kwargs...)
-
-    sim_lrv[!,:t] = sim_lrv.t .+ sim_emb.t[end]
-    sim_mt[!,:t] = sim_mt.t .+ sim_lrv.t[end]
-    sim_juv[!,:t] = sim_juv.t .+ sim_mt.t[end]
     sim_ad[!,:t] = sim_ad.t .+ sim_juv.t[end]
     
     return vcat(sim_emb, sim_lrv, sim_mt, sim_juv, sim_ad)
@@ -426,7 +435,7 @@ end
 
 
 #function sys_complete!(du, u, p, t)
-#    global!(du.glb, u.glb, p.glb, t)
+#    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
 #
 #    if u.ind.is_embryo>0 
 #        embryo!(du, u, p, t)

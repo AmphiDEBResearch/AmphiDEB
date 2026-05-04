@@ -95,4 +95,3 @@ end
 puberty = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
 puberty_terminal = ContinuousCallback(puberty_condition, puberty_affect_terminal!, nothing)
 
-callback_set = CallbackSet(birth, metamorphosis, froglet_emergence, puberty)
