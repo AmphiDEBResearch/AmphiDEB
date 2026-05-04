@@ -1,101 +1,7 @@
-birth_condition(u, t, integrator) = u.ind.X_emb
-function birth_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 1.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 0.
-end
-
-function birth_affect_terminal!(integrator)
-    birth_affect!(integrator)
-    terminate!(integrator)
-end
-
-birth = ContinuousCallback(
-    birth_condition, 
-    birth_affect!, 
-    nothing # we need `neg_affect! = nothing` to tell the solver that the affect should only occur for upcrossings (condition function switches from negative to positive) 
-    )
-
-birth_terminal = ContinuousCallback(
-    birth_condition,
-    birth_affect_terminal!
-)
-
-function metamorphosis_condition(u, t, integrator)
-    u.ind.H - integrator.p.ind.H_j1 # NOTE: for chemical effects, make sure that the effect is applied on H_j1 here
-end
-
-function metamorphosis_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 1.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 0.
-end
-
-function metamorphosis_affect_terminal!(interator)
-    metamorphosis_affect!(integrator)
-    terminate!(integrator)
-end
-
-metamorphosis = ContinuousCallback(
-    metamorphosis_condition, 
-    metamorphosis_affect!
-)
-
-metamorphosis_terminal = ContinuousCallback(
-    metamorphosis_condition, 
-    metamorphosis_affect_terminal!
-)
-
-function froglet_emergence_condition(u, t, integrator)
-    (u.ind.E_mt <= 0) && (u.ind.H >= integrator.p.ind.H_j1) && (u.ind.H < integrator.p.ind.H_p)
-end
-
-function froglet_emergence_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 1.
-    integrator.u.ind.is_adult = 0.
-end
-
-function froglet_emergence_affect_terminal!(integrator)
-    froglet_emergence_affect!(integrator)
-    terminate!(integrator)
-end
-
-froglet_emergence = DiscreteCallback(
-    froglet_emergence_condition, 
-    froglet_emergence_affect!
-)
-
-froglet_emergence_terminal = DiscreteCallback(
-    froglet_emergence_condition, 
-    froglet_emergence_affect_terminal!
-)
-
-puberty_condition(u, t, integrator) = u.ind.H - integrator.p.ind.H_p
-
-function puberty_affect!(integrator)
-    integrator.u.ind.is_embryo = 0.
-    integrator.u.ind.is_larva = 0.
-    integrator.u.ind.is_metamorph = 0.
-    integrator.u.ind.is_juvenile = 0.
-    integrator.u.ind.is_adult = 1.
-end
-
-function puberty_affect_terminal!(integrator)
-    puberty_affect!(integrator)
-    terminate!(integrator)
-end
-
-puberty = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
-
-callback_set = CallbackSet(birth, metamorphosis, froglet_emergence, puberty)
-
+"""
+ODE component for behaviour of lgobal variables. 
+Controls influx/outflux (background mortality) of resource.
+"""
 function global!(du, u, p, t)::Nothing
     
     @unpack dX_in_aq, k_V_aq, dX_in_ter, k_V_ter = p
@@ -151,6 +57,9 @@ end
 
 end
 
+"""
+ODE component for the embryonic life stage.
+"""
 function embryo!(
     du, u, p, t; 
     y_G = 1., y_GP = 1., 
@@ -185,6 +94,9 @@ function embryo!(
 end
 
 
+"""
+ODE component for the larval life stage.
+"""
 function larva!(du, u, p, t; 
     y_G = 1., y_GP = 1.,
     y_M = 1., y_MP = 1.,
@@ -235,7 +147,9 @@ function larva!(du, u, p, t;
     return nothing
 end
 
-
+"""
+ODE component for the metamorph life stage.
+"""
 function metamorph!(
     du, u, p, t;
     y_G = 1, y_GP = 1,
@@ -263,8 +177,6 @@ function metamorph!(
     dH = max(0, ((1 - kappa_T) * dM) / kappa_T - dJ)
     dE_mt = -(dH + dJ + dM)/delta_E
     
-    @show fX S dS eta_AS_emb dA
-
     du.glb.X_aq = -dI
     du.ind.X_emb = 0.
     du.ind.I = dI
@@ -281,45 +193,250 @@ function metamorph!(
 end
 
 
-function juvenile!(du, u, p, t)::Nothing
+"""
+ODE component for the juvenile life stage.
+"""
+function juvenile!(
+    du, u, p, t; 
+    y_G = 1., y_GP = 1.,
+    y_A = 1., y_AP = 1.,
+    y_M = 1., y_MP = 1.,
+    )::Nothing
+
+    @unpack T_ter, A_patch_ter = p.glb
+    @unpack X_ter = u.glb
+
+    @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
+    @unpack S, H = u.ind
+
+    kappa_T = y_T_kap(kappa_juv, b_T, T_ref, T_ter)
+    yT = y_T(T_A, T_ref, T_ter)
+    fX = f_X(X_ter, A_patch_ter, K_X_juv) 
+
+    dI = fX * dI_max_juv * S^(2/3) * yT
+    dA = dI * eta_IA * y_A * y_AP
+    dM = S * k_M_juv * y_M * y_MP * yT
+    dJ = H * k_J_juv * y_M * y_MP * yT 
+    dS = Base.ifelse( 
+        kappa_T * dA >= dM, 
+        y_G * y_GP * eta_AS_juv * (kappa_T * dA - dM),
+        -(dM / eta_SA - kappa_T * dA), 
+    )    
+    dH =  max(0, (1 - kappa_T) * dA - dJ)
+
+    du.ind.X_emb = 0.
+    du.ind.E_mt = 0.
+    du.ind.E_mt_max = 0.
+    du.ind.I = dI 
+    du.ind.A = dA
+    du.ind.M = dM
+    du.ind.J = dJ
+    du.ind.S = dS
+    du.ind.H = dH
+    du.ind.R = 0.
 
     return nothing
 end
 
-function adult!(du, u, p, t)::Nothing
+"""
+ODE component for the adult life stage.
+"""
+function adult!(du, u, p, t;
+    y_G = 1., y_GP = 1.,
+    y_A = 1., y_AP = 1.,
+    y_M = 1., y_MP = 1.,
+    y_R = 1., y_MR = 1.
+    )::Nothing
+    
+    @unpack T_ter, A_patch_ter = p.glb
+    @unpack X_ter = u.glb
+
+    @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, eta_AR, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
+    @unpack S, H = u.ind
+
+    kappa_T = y_T_kap(kappa_juv, b_T, T_ref, T_ter)
+    yT = y_T(T_A, T_ref, T_ter)
+    fX = f_X(X_ter, A_patch_ter, K_X_juv) 
+
+    if S <0 
+        @show t S
+    end
+
+    dI = fX * dI_max_juv * S^(2/3) * yT
+    dA = dI * eta_IA * y_A * y_AP
+    dM = S * k_M_juv * y_M * y_MP * yT
+    dJ = H * k_J_juv * y_M * y_MP * yT 
+    dS = y_G * y_GP * eta_AS_juv * (kappa_T * dA - dM)
+
+    dR =  eta_AR * y_R * y_MR * ((1 - kappa_T) * dA - dJ)
+    
+    du.ind.X_emb = 0.
+    du.ind.E_mt = 0.
+    du.ind.E_mt_max = 0.
+    du.ind.I = dI 
+    du.ind.A = dA
+    du.ind.M = dM
+    du.ind.J = dJ
+    du.ind.S = dS
+    du.ind.H = 0.
+    du.ind.R = dR
 
     return nothing
 end
 
-function sim_embryo(p)
+"""
+ODE system for embryos including global component.
+"""
+function sys_embryo!(du, u, p, t)::Nothing
+    global!(du.glb, u.glb, p.glb, t)
+    embryo!(du, u, p, t)
+end
 
-    p_ind = Model1.generate_individual_params(p)
-    u0 = Model1.initialize_statevars(p_ind)
+"""
+ODE system for larvae including global component.
+"""
+function sys_larva!(du, u, p, t)::Nothing
+    global!(du.glb, u.glb, p.glb, t)
+    larva!(du, u, p, t)
+end
+
+"""
+ODE system for metamorphs including global component.
+"""
+function sys_metamorph!(du, u, p, t)::Nothing
+    global!(du.glb, u.glb, p.glb, t)
+    metamorph!(du, u, p, t)
+end
+
+"""
+ODE system for juveniles including global component.
+"""
+function sys_juvenile!(du, u, p, t)::Nothing
+    global!(du.glb, u.glb, p.glb, t)
+    juvenile!(du, u, p, t)
+end
+
+"""
+ODE system for adults including global component.
+"""
+function sys_adult!(du, u, p, t)::Nothing
+    global!(du.glb, u.glb, p.glb, t)
+    adult!(du, u, p, t)
+end
+
+
+function isoutofdomain(u, p, t)
+    return u.ind.S < 0
+end
+
+"""
+Simulate embryo from initialization to birth.
+"""
+function sim_embryo(p; saveat = [], alg = Rodas5P())
+
+    p_ind = generate_individual_params(p)
+    u0 = initialize_statevars(p_ind)
     tspan = (0,p.glb.t_max)
 
-    prob = ODEProblem(embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = birth_terminal)
+    prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
+    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
 
-function sim_larva(p_ind, u0)
+"""
+Simulate larva from birth to metamorphosis.
+"""
+function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P())
 
+    tspan = (0,p_ind.glb.t_max)
+    
+    prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
+    sol = solve(prob, callback = metamorphosis_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
 
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
 
-function du!(du, u, p, t)
-    global!(du.glb, u.glb, p.glb, t)
+"""
+Simulate metamorph from metamorphosis (Gosner 42) to froglet emergence (Gosner 46)-
+"""
+function sim_metamorph(p_ind, u0; saveat = [], alg = Rodas5P())
 
-    if u.ind.is_embryo>0 
-        embryo!(du, u, p, t)
-    end
+    tspan = (0,p_ind.glb.t_max)
 
-    if u.ind.is_larva>0 
-        larva!(du, u, p, t)
-    end
+    prob = ODEProblem(sys_metamorph!, u0, tspan, p_ind)
+    sol = solve(prob, callback = froglet_emergence_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
 
-    if u.ind.is_metamorph>0
-        metamorph!(du, u, p, t)
-    end
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind 
 end
+
+"""
+Simulate juvenile from froglet emergence (Gosner 46) to puberty.
+"""
+function sim_juvenile(p_ind, u0; saveat = [], alg = Rodas5P())
+
+    tspan = (0,p_ind.glb.t_max)
+
+    prob = ODEProblem(sys_juvenile!, u0, tspan, p_ind, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    sol = solve(prob, callback = puberty_terminal)
+
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+end
+
+"""
+Simulate adult from puberty to pre-defined maximum time `p.glb.t_max`.
+"""
+function sim_adult(p_ind, u0; saveat = [], alg = Rodas5P())
+
+    tspan = (0,p_ind.glb.t_max)
+
+    prob = ODEProblem(sys_adult!, u0, tspan, p_ind)
+    sol = solve(prob, alg = alg, saveat = saveat, isoutofdomain = isoutofdomain)
+
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+end
+
+
+"""
+Simulate all life stages consecutively as separate ODE systems.
+"""
+function sim_all(p; kwargs...)
+
+    sim_emb, u0lrv, p_ind = sim_embryo(p; kwargs...)
+    @assert sim_emb.t[end] < p.glb.t_max
+    
+    sim_lrv, u0mt, p_ind = sim_larva(p_ind, u0lrv; kwargs...)
+    @assert sim_lrv.t[end] < p.glb.t_max
+
+    sim_mt, u0juv, p_ind = sim_metamorph(p_ind, u0mt; kwargs...)
+    @assert sim_mt.t[end] < p.glb.t_max
+
+    sim_juv, u0ad, p_ind = sim_juvenile(p_ind, u0juv; kwargs...)
+    @assert sim_juv.t[end] < p.glb.t_max
+
+    sim_ad, uend, p_ind = sim_adult(p_ind, u0ad; kwargs...)
+
+    sim_lrv[!,:t] = sim_lrv.t .+ sim_emb.t[end]
+    sim_mt[!,:t] = sim_mt.t .+ sim_lrv.t[end]
+    sim_juv[!,:t] = sim_juv.t .+ sim_mt.t[end]
+    sim_ad[!,:t] = sim_ad.t .+ sim_juv.t[end]
+    
+    return vcat(sim_lrv, sim_mt, sim_juv, sim_ad)
+end
+
+
+#function sys_complete!(du, u, p, t)
+#    global!(du.glb, u.glb, p.glb, t)
+#
+#    if u.ind.is_embryo>0 
+#        embryo!(du, u, p, t)
+#    end
+#
+#    if u.ind.is_larva>0 
+#        larva!(du, u, p, t)
+#    end
+#
+#    if u.ind.is_metamorph>0
+#        metamorph!(du, u, p, t)
+#    end
+#end

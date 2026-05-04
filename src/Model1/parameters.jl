@@ -3,7 +3,7 @@
 Global parameters with defaults.
 """
 glb = ComponentVector(
-    t_max = 56., # 8 - week simulation
+    t_max = 3 * 365., # max simulation time (real simulation time can be shorter when callbacks are triggered) [d]
     N0 = 1., # start with single value [] - only possible setting for ODE_simulator
     dX_in_aq = 20., # food input rate in aquatic medium [mg d^-1]
     dX_in_ter = 20., # food input rate in terrestric environment [mg d^-1]
