@@ -1,6 +1,3 @@
-if !isinteractive()
-    using Pkg; Pkg.activate("test")
-end
 
 if isinteractive()
     using Pkg; Pkg.activate("lib/AmphiDEB.jl/test")
@@ -18,10 +15,10 @@ using OrdinaryDiffEq
 
 using StatsPlots
 
-
+p = deepcopy(Model1.params)
 sim_emb, u0lrv, p_ind = Model1.sim_embryo(p)
 
-u0lrv
+@df sim_emb plot(:t, [:S :X_emb])
 
 begin
     p = ComponentVector(glb=Model1.glb, spc=Model1.spc)

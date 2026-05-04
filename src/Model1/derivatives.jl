@@ -7,11 +7,21 @@ function birth_affect!(integrator)
     integrator.u.ind.is_adult = 0.
 end
 
+function birth_affect_terminal!(integrator)
+    birth_affect!(integrator)
+    terminate!(integrator)
+end
+
 birth = ContinuousCallback(
     birth_condition, 
     birth_affect!, 
     nothing # we need `neg_affect! = nothing` to tell the solver that the affect should only occur for upcrossings (condition function switches from negative to positive) 
     )
+
+birth_terminal = ContinuousCallback(
+    birth_condition,
+    birth_affect_terminal!
+)
 
 function metamorphosis_condition(u, t, integrator)
     u.ind.H - integrator.p.ind.H_j1 # NOTE: for chemical effects, make sure that the effect is applied on H_j1 here
@@ -25,9 +35,19 @@ function metamorphosis_affect!(integrator)
     integrator.u.ind.is_adult = 0.
 end
 
+function metamorphosis_affect_terminal!(interator)
+    metamorphosis_affect!(integrator)
+    terminate!(integrator)
+end
+
 metamorphosis = ContinuousCallback(
     metamorphosis_condition, 
     metamorphosis_affect!
+)
+
+metamorphosis_terminal = ContinuousCallback(
+    metamorphosis_condition, 
+    metamorphosis_affect_terminal!
 )
 
 function froglet_emergence_condition(u, t, integrator)
@@ -42,12 +62,23 @@ function froglet_emergence_affect!(integrator)
     integrator.u.ind.is_adult = 0.
 end
 
+function froglet_emergence_affect_terminal!(integrator)
+    froglet_emergence_affect!(integrator)
+    terminate!(integrator)
+end
+
 froglet_emergence = DiscreteCallback(
     froglet_emergence_condition, 
     froglet_emergence_affect!
 )
 
+froglet_emergence_terminal = DiscreteCallback(
+    froglet_emergence_condition, 
+    froglet_emergence_affect_terminal!
+)
+
 puberty_condition(u, t, integrator) = u.ind.H - integrator.p.ind.H_p
+
 function puberty_affect!(integrator)
     integrator.u.ind.is_embryo = 0.
     integrator.u.ind.is_larva = 0.
@@ -55,6 +86,12 @@ function puberty_affect!(integrator)
     integrator.u.ind.is_juvenile = 0.
     integrator.u.ind.is_adult = 1.
 end
+
+function puberty_affect_terminal!(integrator)
+    puberty_affect!(integrator)
+    terminate!(integrator)
+end
+
 puberty = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
 
 callback_set = CallbackSet(birth, metamorphosis, froglet_emergence, puberty)
@@ -261,7 +298,7 @@ function sim_embryo(p)
     tspan = (0,p.glb.t_max)
 
     prob = ODEProblem(embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = Model1.callback_set)
+    sol = solve(prob, callback = birth_terminal)
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end

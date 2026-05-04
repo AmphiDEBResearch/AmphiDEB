@@ -165,7 +165,7 @@ params = ComponentVector(glb = glb, spc = spc)
 
 function generate_individual_params(p; kwargs...)
 
-     ind = EcotoxSystems.getval.(p.spc) |> 
+    ind = EcotoxSystems.getval.(p.spc) |> 
     x -> Real.(x) |> 
     x -> begin
         x.dI_max_emb *= x.Z^(1/3)
