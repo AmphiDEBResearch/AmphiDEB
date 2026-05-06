@@ -13,6 +13,7 @@ using StatsBase
 
 
 module FittingUtils
+    using EcotoxModelFitting
     include("FittingUtils/losses.jl")
     include("FittingUtils/utils.jl")
     include("FittingUtils/traits.jl")
@@ -22,7 +23,7 @@ end
 
 module Model1
 
-    using EcotoxSystems
+    using EcotoxSystems, EcotoxModelFitting
 
     using Parameters
     using Distributions
@@ -31,6 +32,7 @@ module Model1
     using ComponentArrays, StaticArrays
     using OrdinaryDiffEq
     using StatsBase
+
     include("Model1/parameters.jl")
     include("Model1/statevars.jl")
     include("Model1/callbacks.jl")
