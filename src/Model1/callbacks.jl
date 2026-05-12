@@ -15,12 +15,14 @@ end
 birth = ContinuousCallback(
     birth_condition, 
     birth_affect!, 
-    nothing # we need `neg_affect! = nothing` to tell the solver that the affect should only occur for upcrossings (condition function switches from negative to positive) 
+    nothing, # we need `neg_affect! = nothing` to tell the solver that the affect should only occur for upcrossings (condition function switches from negative to positive) 
+    save_positions = (false,true)
     )
 
 birth_terminal = ContinuousCallback(
     birth_condition,
-    birth_affect_terminal!
+    birth_affect_terminal!,
+    save_positions = (false,true)
 )
 
 function metamorphosis_condition(u, t, integrator)
@@ -42,12 +44,14 @@ end
 
 metamorphosis = ContinuousCallback(
     metamorphosis_condition, 
-    metamorphosis_affect!
+    metamorphosis_affect!,
+    save_positions = (false,true)
 )
 
 metamorphosis_terminal = ContinuousCallback(
     metamorphosis_condition, 
-    metamorphosis_affect_terminal!
+    metamorphosis_affect_terminal!,
+    save_positions = (false,true)
 )
 
 function froglet_emergence_condition(u, t, integrator)
@@ -69,12 +73,14 @@ end
 
 froglet_emergence = ContinuousCallback(
     froglet_emergence_condition, 
-    froglet_emergence_affect!
+    froglet_emergence_affect!,
+    save_positions = (false,true)
 )
 
 froglet_emergence_terminal = ContinuousCallback(
     froglet_emergence_condition, 
-    froglet_emergence_affect_terminal!
+    froglet_emergence_affect_terminal!,
+    save_positions = (false,true)
 )
 
 puberty_condition(u, t, integrator) = u.ind.H - integrator.p.ind.H_p
@@ -92,6 +98,16 @@ function puberty_affect_terminal!(integrator)
     terminate!(integrator)
 end
 
-puberty = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
-puberty_terminal = ContinuousCallback(puberty_condition, puberty_affect_terminal!, nothing)
+puberty = ContinuousCallback(
+    puberty_condition, 
+    puberty_affect!, 
+    nothing,
+    save_positions = (false,true)
+    )
+puberty_terminal = ContinuousCallback(
+    puberty_condition, 
+    puberty_affect_terminal!, 
+    nothing,
+    save_positions = (false,true)
+    )
 

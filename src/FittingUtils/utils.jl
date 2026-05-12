@@ -1,8 +1,3 @@
-
-
-plot(hyper::Hyperdist; kwargs...) = plot(hyper.dist; kwargs...)
-
-
 function assign_value_by_label!(p, label, value)::Nothing
 
     labels = EcotoxSystems.ComponentArrays.labels(p)
@@ -11,9 +6,7 @@ function assign_value_by_label!(p, label, value)::Nothing
     p[idx] = value
 
     return nothing
-
 end
-
 
 function assign_values_from_file!(
     p::ComponentVector, 
@@ -43,27 +36,6 @@ function assign_values_from_file!(
     return nothing
 end
 
-"""
-    plot_metam_phase(sim::DataFrame)
-
-Plot state varariables with indication of life stages
-"""
-function plot_metam_phase(sim::DataFrame)
-
-    plt = @df sim plot(
-        plot(:t, :S, color = :black, lw = 1.5, ylabel = "S"), 
-        plot(:t, :E_mt, color = :black, lw = 1.5, ylabel = "E_mt"), 
-        xlabel = "Time (d)", xlim = (0,100), leg = false
-    )
-
-    for (i,var) in enumerate([:S, :E_mt])
-        @df sim plot!(subplot = i, :t, :larva .* maximum(sim[:,var]), fill = true, fillalpha = .2, lw = 0, color = :purple, linetype = :stepmid)
-        @df sim plot!(subplot = i, :t, :metamorph .* maximum(sim[:,var]), fill = true, fillalpha = .2, lw = 0, color = :steelblue, linetype = :stepmid)
-        @df sim plot!(subplot = i, :t, :juvenile .* maximum(sim[:,var]), fill = true, fillalpha = .2, lw = 0, color = :teal, linetype = :stepmid)
-    end
-
-    return plt
-end
 
 macro h(x)
     quote

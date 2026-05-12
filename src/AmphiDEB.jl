@@ -11,7 +11,6 @@ using ComponentArrays, StaticArrays
 using OrdinaryDiffEq
 using StatsBase
 
-
 module FittingUtils
     using EcotoxSystems,EcotoxModelFitting
     using ComponentArrays
@@ -21,8 +20,6 @@ module FittingUtils
     using Distributions
     using Chain
 
-    import StatsPlots: @df
-    import Plots:plot
     import EcotoxModelFitting: Hyperdist
 
     include("FittingUtils/losses.jl")

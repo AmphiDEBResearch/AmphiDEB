@@ -164,3 +164,7 @@ funded by the European Food Safety Authortiy (EFSA).
 
 - Perfrmance improvements, working towards allocation-free ODEs. 
     - Achieved minor performance improvements by using @inbounds (ca. 15% decrease in memory allocation).
+
+### v0.3.8
+
+- set `save_positions = (false,true)` in life stage callbacks to maintain compatability with EcotoxModelFitting (avoid -0 in time column)
