@@ -330,7 +330,7 @@ end
 """
 Simulate embryo from initialization to birth.
 """
-function sim_embryo(p; saveat = [], alg = Rodas5P())
+function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false)
 
     p_ind = generate_individual_params(p)
     u0 = initialize_statevars(p_ind)
@@ -338,6 +338,10 @@ function sim_embryo(p; saveat = [], alg = Rodas5P())
 
     prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
     sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+
+    if return_sol
+        return sol, sol.u[end], p_ind
+    end
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
@@ -351,7 +355,7 @@ function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P())
     
     prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
     sol = solve(prob, callback = metamorphosis_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
-
+    
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
 

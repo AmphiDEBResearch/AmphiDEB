@@ -26,12 +26,12 @@ end
 function loss_mse_logtransform(a::Vector{Float64}, b::Vector{Float64}, weight = 1, nominal_length::Int = length(b))::Float64
 
     # negative values are replcaced with NaN
-    # NaN will lead to rejection of the particle, and we should only be getting negtaive values for parameter vectors which are unreasonable to begin with, 
+    # NaN will lead to rejection of the particle, and we should only be getting negative values for parameter vectors which are unreasonable to begin with, 
     # so we don't expect this to have undesired side-effects
 
     b[b .< 0] .= NaN 
 
-    return missing_values_penalty(nominal_length, length(b)) * sum(weight * (log.(a .+ 1) .- log.(b .+ 1)).^2)/length(a)
+    return missing_values_penalty(nominal_length, length(b)) * sum(@. weight * (log.(a .+ 1) .- log.(b .+ 1)).^2)/length(a)
 end
 
 """
