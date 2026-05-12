@@ -7,10 +7,6 @@ end
 
 using Test, Revise
 
-# TODO: 
-#   - update tests to accomodate revised package organization
-#   - update IBM configuration to accomodate revised package organization
-#       - make sure that switching between life stages remains functional
 
 include("test01_ODE_noeffects.jl")
 include("test02_IBM_noeffects.jl")

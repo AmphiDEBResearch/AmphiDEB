@@ -13,17 +13,27 @@ using StatsBase
 
 
 module FittingUtils
-    using EcotoxModelFitting
+    using EcotoxSystems,EcotoxModelFitting
+    using ComponentArrays
+
+    using DataFrames, CSV
+    using Latexify
+    using Distributions
+    using Chain
+
+    import StatsPlots: @df
+    import Plots:plot
+    import EcotoxModelFitting: Hyperdist
+
     include("FittingUtils/losses.jl")
     include("FittingUtils/utils.jl")
     include("FittingUtils/traits.jl")
 end
 
-
-
 module Model1
 
     using EcotoxSystems, EcotoxModelFitting
+    using ..FittingUtils
 
     using Parameters
     using Distributions
@@ -37,7 +47,6 @@ module Model1
     include("Model1/statevars.jl")
     include("Model1/callbacks.jl")
     include("Model1/derivatives.jl")
-    include("Model1/fit_larvae_fulldata.jl")
 end
 
 
