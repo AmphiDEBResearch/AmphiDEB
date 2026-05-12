@@ -1,8 +1,5 @@
-using DataFrames 
-using Latexify
-using Distributions
 
-import Plots:plot
+
 plot(hyper::Hyperdist; kwargs...) = plot(hyper.dist; kwargs...)
 
 
@@ -151,7 +148,7 @@ end
 """
 Convert parameter object to table (`DataFrame`).
 """
-function _as_table(p::EcotoxSystems.ComponentVector; printtable = true)
+function _as_table(p::ComponentVector; printtable = true)
 
     df = DataFrame(
         param = EcotoxSystems.ComponentArrays.labels(p), 
