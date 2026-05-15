@@ -5,13 +5,6 @@
 # `a` and `b` are the observed and predicted time-series for a single response variable in a single treatment
 # the data weights are (currently) assumed to be assigned on the level of the response variable, rather than for individual observations
 
-# loss functions apply a penalty if the length of the prediction does not match the length of the data
-# we cannot simply use length(a) because the predictions have already been matched with data at this point, 
-# dropping entries for which not both exist. 
-# the penalty applies if we encounter instabilities during ODE solving or a certain stage of the simulation cannot be reached
-# by default, the penalty is `Inf`, which will lead to rejection of the parameter sample in the ABC algorithm
-# any other definitions of missing_values_penalty should be considered very carefully
-
 missing_values_penalty(nominal_length, actual_length) = actual_length < nominal_length ? Inf : 1 #(((nominal_length)+1)/(actual_length+1))^2
 
 """
