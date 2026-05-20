@@ -61,13 +61,16 @@ function embryo!(
     y_A = 1., y_AP = 1.
     )::Nothing
 
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
+
     @unpack T_aq, food_dynamic = p.glb
     @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb = p.ind
     @unpack S, H = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
 
-    dI = S^(2/3) * dI_max_emb * yT
+    dI = abs(S)^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
     dM = S * k_M_emb * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
@@ -96,6 +99,9 @@ function larva!(du, u, p, t;
     y_M = 1., y_MP = 1.,
     y_A = 1., y_AP = 1.
     )::Nothing
+
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
 
     @unpack T_aq, V_patch_aq, food_dynamic = p.glb
     @unpack Z, dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
@@ -155,6 +161,9 @@ function metamorph!(
     y_A = 1, y_AP = 1,
     )::Nothing
 
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
+
     @unpack T_aq, V_patch_aq, food_dynamic = p.glb
     @unpack dI_max_lrv, eta_IA, eta_AS_emb, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, delta_E, delta_k_M_mt, T_A = p.ind
     @unpack X_aq = u.glb
@@ -164,8 +173,6 @@ function metamorph!(
     k_M = k_M_emb * delta_k_M_mt 
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
-
-    S = max(1e-10, S)
 
     dI = fX * dI_max_lrv * (E_mt/E_mt_max) * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
@@ -201,6 +208,9 @@ function juvenile!(
     y_A = 1., y_AP = 1.,
     y_M = 1., y_MP = 1.,
     )::Nothing
+
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
 
     @unpack T_ter, A_patch_ter, food_dynamic = p.glb
     @unpack X_ter = u.glb
@@ -248,6 +258,9 @@ function adult!(du, u, p, t;
     y_M = 1., y_MP = 1.,
     y_R = 1., y_MR = 1.
     )::Nothing
+
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
     
     @unpack food_dynamic, T_ter, A_patch_ter = p.glb
     @unpack X_ter = u.glb
