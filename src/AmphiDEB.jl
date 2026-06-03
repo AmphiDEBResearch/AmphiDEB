@@ -61,12 +61,8 @@ include("traits.jl")
 include("utils.jl") # various auxiliary functions
 
 # to precompile the model, we simulate the default parameters
-@compile_workload begin
-    p = deepcopy(defaultparams)
-
-    sim = @replicates ODE_simulator(p) 10
-end
-
-
+#@compile_workload begin
+#    sim = replicates(p->ODE_simulator(p), params, 10)
+#end
 
 end # module AmphiDEB
