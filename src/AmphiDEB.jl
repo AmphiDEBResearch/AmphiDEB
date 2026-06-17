@@ -29,8 +29,7 @@ end
 
 module Model1
 
-    using EcotoxSystems, EcotoxModelFitting
-    using ..FittingUtils
+    using EcotoxSystems
 
     using Parameters
     using Distributions
