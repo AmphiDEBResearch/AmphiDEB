@@ -29,7 +29,8 @@ end
 
 module Model1
 
-    using EcotoxSystems
+    using EcotoxSystems, EcotoxModelFitting
+    import ..FittingUtils
 
     using Parameters
     using Distributions
@@ -45,19 +46,38 @@ module Model1
     include("Model1/derivatives.jl")
 end
 
+module Model2
+    using EcotoxSystems, EcotoxModelFitting
+    import ..FittingUtils
 
-# for backwards-compatability:
+    using Parameters
+    using Distributions
+    using DataStructures
+    import DataFrames: AbstractDataFrame
+    using ComponentArrays, StaticArrays
+    using OrdinaryDiffEq
+    using StatsBase
 
-import .Model1 
-defaultparams = Model1.params # old "defaultparams" is an alias for "Model1.params"
-const ODE_simulator = Model1.sim_all # old "ODE_simulator" is an alias for the now "Model1.sim_all"
+    include("Model2/parameters.jl")
+    include("Model2/statevars.jl")
+    include("Model2/callbacks.jl")
+    include("Model2/derivatives.jl")
 
-include("individual_rules.jl") # individual rule-based component
-include("global_rules.jl") # global rule-based component
-#include("simulators.jl") # functions to run run simulations
-include("traits.jl") 
+end
 
-include("utils.jl") # various auxiliary functions
+
+## for backwards-compatability:
+#
+#import .Model1 
+#defaultparams = Model1.params # old "defaultparams" is an alias for "Model1.params"
+#const ODE_simulator = Model1.sim_all # old "ODE_simulator" is an alias for the now "Model1.sim_all"
+#
+#include("individual_rules.jl") # individual rule-based component
+#include("global_rules.jl") # global rule-based component
+##include("simulators.jl") # functions to run run simulations
+#include("traits.jl") 
+#
+#include("utils.jl") # various auxiliary functions
 
 # to precompile the model, we simulate the default parameters
 #@compile_workload begin
