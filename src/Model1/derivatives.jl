@@ -70,7 +70,7 @@ function embryo!(
 
     yT = y_T(T_A, T_ref, T_aq)
 
-    dI = abs(S)^(2/3) * dI_max_emb * yT
+    dI = S^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
     dM = S * k_M_emb * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
