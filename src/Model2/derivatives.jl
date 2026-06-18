@@ -39,7 +39,7 @@ function metamorph!(
     dM = S * k_M * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
 
-    dS = eta_AS_emb * y_G * y_GP * kappa * pE_mt
+    dS = eta_AS_emb * y_G * y_GP * (kappa_T * pE_mt - dM)
     dH = (1 - kappa_T) * pE_mt - dJ
     
     dE_mt = -pE_mt
