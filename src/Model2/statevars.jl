@@ -43,22 +43,21 @@ function initialize_individual_statevars(
         M = 0., # somatic maintenance
         J = 0., # maturity maintenance 
         
-        S_max = calc_S_max(p.ind[:dI_max_emb], p.ind[:eta_IA], p.ind[:kappa_emb], p.ind[:k_M_emb]), # currently possible maximum stuructural mass
+        S_max = calc_S_max(p.ind.dI_max_emb, p.ind.eta_IA, p.ind.kappa_emb, p.ind.k_M_emb), # currently possible maximum stuructural mass
 
         E_mt = 1e-10, # metamorphic reserve
         E_mt_max = 1e-10, # maximum metamorphic reserve
         P_S = 0, # pathogen sporangia
 
         # auxiliary variables, only needed for population modelling
-
-        S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
-        id = id, 
-        cohort = cohort,
-        age = 0.,
-        cause_of_death = 0.,
-        time_since_last_repro = 0.,
-        cum_repro = 0.,
-
+        aux = ComponentVector(
+            S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
+            age = 0.,
+            cause_of_death = 0.,
+            time_since_last_repro = 0.,
+            cum_repro = 0.,
+            fX = 1.,
+        )
     )
 end
 

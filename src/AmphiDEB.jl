@@ -12,15 +12,6 @@ using OrdinaryDiffEq
 using StatsBase
 
 
-include("AmphiDEB_M1/AmphiDEB_M1.jl")
-include("AmphiDEB_M1/parameters.jl")
-include("AmphiDEB_M1/statevars.jl")
-include("AmphiDEB_M1/derivatives.jl")
-include("AmphiDEB_M1/rules.jl")
-include("AmphiDEB_M1/traits.jl")
-
-
-
 include("utils.jl") # various auxiliary functions
 
 # to precompile the model, we simulate the default parameters
@@ -69,24 +60,5 @@ module Model2
     include("Model2/derivatives.jl")
 
 end
-
-
-## for backwards-compatability:
-#
-#import .Model1 
-#defaultparams = Model1.params # old "defaultparams" is an alias for "Model1.params"
-#const ODE_simulator = Model1.sim_all # old "ODE_simulator" is an alias for the now "Model1.sim_all"
-#
-#include("individual_rules.jl") # individual rule-based component
-#include("global_rules.jl") # global rule-based component
-##include("simulators.jl") # functions to run run simulations
-#include("traits.jl") 
-#
-#include("utils.jl") # various auxiliary functions
-
-# to precompile the model, we simulate the default parameters
-#@compile_workload begin
-#    sim = replicates(p->ODE_simulator(p), params, 10)
-#end
 
 end # module AmphiDEB

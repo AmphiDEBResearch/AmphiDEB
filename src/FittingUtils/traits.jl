@@ -206,7 +206,7 @@ end
 
 Calculates maximum structural mass of larvae from parameters. 
 """
-calc_S_max_lrv(spc::EcotoxSystems.ComponentVector) = ((spc.kappa_emb * spc.dI_max_lrv * spc.eta_IA) / spc.k_M_emb)^3
+calc_S_max_lrv(spc::ComponentVector) = ((spc.kappa_emb * spc.dI_max_lrv * spc.eta_IA) / spc.k_M_emb)^3
 
 
 """
@@ -214,7 +214,7 @@ calc_S_max_lrv(spc::EcotoxSystems.ComponentVector) = ((spc.kappa_emb * spc.dI_ma
 
 Calculates maximum structural mass of juveniles/adults from parameters. 
 """
-calc_S_max_juv(spc::EcotoxSystems.ComponentVector) = ((spc.kappa_juv * spc.dI_max_juv * spc.eta_IA) / spc.k_M_juv)^3
+calc_S_max_juv(spc::ComponentVector) = ((spc.kappa_juv * spc.dI_max_juv * spc.eta_IA) / spc.k_M_juv)^3
 
 function calc_wetmass(r::DataFrameRow, watercontent_larvae, watercontent_juveniles)
 

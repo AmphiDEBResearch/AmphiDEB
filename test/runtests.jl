@@ -1,9 +1,5 @@
- 
-if isinteractive()
-    using Pkg; Pkg.activate(@__DIR__)
-    Pkg.develop(path = joinpath("lib", "AmphiDEB"))
-end
-
+using Pkg; Pkg.activate("test")
+Pkg.develop(path=".")
 
 using Test
 using Plots, StatsPlots, Plots.Measures
@@ -17,11 +13,7 @@ using StatsBase
 
 using Revise
 
-using AmphiDEB
-using EcotoxSystems
-
-import EcotoxSystems: sig
-import EcotoxSystems: constrmvec
+using AmphiDEB, AmphiDEB.EcotoxSystems
 
 include("test01_ODE_noeffects.jl")
 include("test02_IBM_noeffects.jl")
