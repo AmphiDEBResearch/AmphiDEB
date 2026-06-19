@@ -35,6 +35,8 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
         E_mt_max = 1e-10, # maximum metamorphic reserve
         P_S = 0, # pathogen sporangia
 
+        tktd = tktdstates_binary(),
+
         # auxiliary variables, only needed for population modelling
         aux = ComponentVector(
             id = id, 
@@ -49,6 +51,25 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
     )
 end
 
+function tktdstates_binary()
+    return ComponentVector(
+        D_W1_G = 0.,
+        D_W1_M = 0.,
+        D_W1_A = 0.,
+        D_W1_R = 0.,
+        D_W1_H = 0.,
+        D_W1_κ_pos = 0.,
+        D_W1_κ_neg = 0.,
+
+        D_W2_G = 0.,
+        D_W2_M = 0.,
+        D_W2_A = 0.,
+        D_W2_R = 0.,
+        D_W2_H = 0.,
+        D_W2_κ_pos = 0.,
+        D_W2_κ_neg = 0.,
+    )
+end
 
 function initialize_global_statevars(p)
     return ComponentVector(
@@ -62,9 +83,11 @@ function initialize_global_statevars(p)
         N_mt = 0,
         N_juv = 0,
         N_ad = 0,
-        aging_mortality = 0, # cumulative mortalities (only tracked in population modelling)
+        aging_mortality = 0, # cumulative mortalities
         starvation_mortality = 0,
         background_mortality = 0,
+        S_mean = 0, # average structural mass
+        S_sd = 0, # sd of of structural mass
     )
 end
 

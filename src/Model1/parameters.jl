@@ -2,7 +2,7 @@
 """
 Global parameters with defaults.
 """
-glb = ComponentVector(
+glb() = ComponentVector(
     t_max = 3 * 365., # max simulation time (real simulation time can be shorter when callbacks are triggered) [d]
     N0 = 1., # initial number of individuals (always 0 for pure-ODE system) [#]
     food_dynamic = 1., # boolean indicator of whether food abundance is treated as a dynamic variable [-]
@@ -23,7 +23,7 @@ glb = ComponentVector(
 """
 Species-specific parameters with defaults.
 """
-spc = ComponentVector(
+spc() = ComponentVector(
 
     #=
     Metaparameters
@@ -73,10 +73,68 @@ spc = ComponentVector(
         h_S = 1e-3, 
         S_rel_crit = 1/3, 
         a_max = Truncated(Normal(3650, 365), 0, Inf)
-    )
+    ), 
+    tktd = tktdparams_binary_loglogistic()
 )
 
-defaultparams() = ComponentVector(glb = glb, spc = spc)
+function tktdparams_binary_loglogistic()
+    return ComponentVector(
+        k_D1_G = 0.,
+        k_D1_M = 0.,
+        k_D1_A = 0.,
+        k_D1_R = 0.,
+        k_D1_H = 0., # increase in H_j1
+        k_D1_κ_pos = 0., # increase in κ
+        k_D1_κ_neg = 0., # decrease in κ
+
+        e1_G = 1.,
+        e1_M = 1.,
+        e1_A = 1.,
+        e1_R = 1.,
+        e1_H = 1.,
+        e1_κ_pos = 1., # increase in κ
+        e1_κ_neg = 1., # decrease in κ
+
+        b1_G = 2.,
+        b1_M = 2.,
+        b1_A = 2.,
+        b1_R = 2.,
+        b1_H = 2., # increase in H_j1
+        b1_κ_pos = 2., # increase in κ
+        b1_κ_neg = 2., # decrease in κ
+
+        k_D2_G = 0.,
+        k_D2_M = 0.,
+        k_D2_A = 0.,
+        k_D2_R = 0.,
+        k_D2_H = 0., # increase in H_j1
+        k_D2_κ_pos = 0., # increase in κ
+        k_D2_κ_neg = 0., # decrease in κ
+
+        e2_G = 1.,
+        e2_M = 1.,
+        e2_A = 1.,
+        e2_R = 1.,
+        e2_H = 1., # increase in H_j1
+        e2_κ_pos = 1., # increase in κ
+        e2_κ_neg = 1., # decrease in κ
+
+        b2_G = 2.,
+        b2_M = 2.,
+        b2_A = 2.,
+        b2_R = 2.,
+        b2_H = 2., # increase in H_j1
+        b2_κ_pos = 2., # increase in κ
+        b2_κ_neg = 2., # decrease in κ
+    )
+end
+
+
+# we can use the same parameter vector for the linear model, 
+# interpreting `e` as threshold and `b` as slope
+const tktdparams_binary_linear = tktdparams_binary_loglogistic
+
+defaultparams() = ComponentVector(glb = glb(), spc = spc())
 
 function generate_individual_params(p; kwargs...)
 

@@ -26,7 +26,8 @@ birth_terminal = ContinuousCallback(
 )
 
 function metamorphosis_condition(u, t, integrator)
-    u.ind.H - integrator.p.ind.H_j1 # NOTE: for chemical effects, make sure that the effect is applied on H_j1 here
+    _, _, _, _, y_H, _, _ = aquatic_td_binary_IA_loglogistic(integrator.du, u, integrator.p, t)
+    u.ind.H - integrator.p.ind.H_j1 * y_H 
 end
 
 function metamorphosis_affect!(integrator)

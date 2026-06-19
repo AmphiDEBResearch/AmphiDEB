@@ -103,14 +103,20 @@ function larva!(du, u, p, t;
     # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
     u = max.(0, u)
 
+    
     @unpack T_aq, V_patch_aq, food_dynamic = p.glb
     @unpack Z, dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
     @unpack X_aq = u.glb
     @unpack S, H, E_mt = u.ind
+    
+    aquatic_tk_binary_loglogistic!(du, u, p, t)
+
+    y_G, y_M, y_A, _, _, y_κ_neg, y_κ_pos = aquatic_td_binary_IA_loglogistic(du, u, p, t)
 
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
-    kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq)
+
+    kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq) * y_κ_neg * y_κ_pos
 
     S = max(0, S)
 
@@ -293,6 +299,71 @@ function adult!(du, u, p, t;
     du.ind.R = dR
 
     return nothing
+end
+
+minimal_TK(k_D, C_W, D_W) = k_D * (C_W - D_W)
+
+function aquatic_tk_binary_loglogistic!(du, u, p, t)::Nothing
+
+    p_tktd = p.ind.tktd
+    u_tk = u.ind.tktd
+
+    du.ind.tktd.D_W1_G = minimal_TK(p_tktd.k_D1_G, p.glb.C_W1, u_tk.D_W1_G)
+    du.ind.tktd.D_W1_M = minimal_TK(p_tktd.k_D1_M, p.glb.C_W1, u_tk.D_W1_M)
+    du.ind.tktd.D_W1_A = minimal_TK(p_tktd.k_D1_A, p.glb.C_W1, u_tk.D_W1_A)
+    du.ind.tktd.D_W1_R = minimal_TK(p_tktd.k_D1_R, p.glb.C_W1, u_tk.D_W1_R)
+    du.ind.tktd.D_W1_H = minimal_TK(p_tktd.k_D1_H, p.glb.C_W1, u_tk.D_W1_H)
+    du.ind.tktd.D_W1_κ_pos = minimal_TK(p_tktd.k_D1_κ_pos, p.glb.C_W1, u_tk.D_W1_κ_neg)
+    du.ind.tktd.D_W1_κ_neg = minimal_TK(p_tktd.k_D1_κ_neg, p.glb.C_W1, u_tk.D_W1_κ_pos)
+    
+    du.ind.tktd.D_W2_G = minimal_TK(p_tktd.k_D2_G, p.glb.C_W2, u_tk.D_W2_G)
+    du.ind.tktd.D_W2_M = minimal_TK(p_tktd.k_D2_M, p.glb.C_W2, u_tk.D_W2_M)
+    du.ind.tktd.D_W2_A = minimal_TK(p_tktd.k_D2_A, p.glb.C_W2, u_tk.D_W2_A)
+    du.ind.tktd.D_W2_R = minimal_TK(p_tktd.k_D2_R, p.glb.C_W2, u_tk.D_W2_R)
+    du.ind.tktd.D_W2_H = minimal_TK(p_tktd.k_D2_H, p.glb.C_W2, u_tk.D_W2_H)
+    du.ind.tktd.D_W2_κ_pos = minimal_TK(p_tktd.k_D2_κ_pos, p.glb.C_W2, u_tk.D_W2_κ_neg)
+    du.ind.tktd.D_W2_κ_neg = minimal_TK(p_tktd.k_D2_κ_neg, p.glb.C_W2, u_tk.D_W2_κ_pos)
+    
+    return nothing
+end
+
+LL2neg(D, e, b) = 1/(1 + (D/e)^b)
+LL2pos(D, e, b) = 1 - log(LL2neg(D, e, b))
+
+function aquatic_td_binary_IA_loglogistic(du, u, p, t)
+
+    u_tk = u.ind.tktd 
+    p_tktd = p.ind.tktd
+
+    y_G1 = LL2neg(u_tk.D_W1_G, p_tktd.e1_G, p_tktd.b1_G)
+    y_G2 = LL2neg(u_tk.D_W2_G, p_tktd.e2_G, p_tktd.b2_G)
+    y_G = y_G1 * y_G2
+
+    y_M1 = LL2pos(u_tk.D_W1_M, p_tktd.e1_M, p_tktd.b1_M)
+    y_M2 = LL2pos(u_tk.D_W2_M, p_tktd.e2_M, p_tktd.b2_M)
+    y_M = y_M1 * y_M2
+
+    y_A1 = LL2neg(u_tk.D_W1_A, p_tktd.e1_A, p_tktd.b1_A)
+    y_A2 = LL2neg(u_tk.D_W2_A, p_tktd.e2_A, p_tktd.b2_A)
+    y_A = y_A1 * y_A2
+
+    y_R1 = LL2neg(u_tk.D_W1_R, p_tktd.e1_R, p_tktd.b1_R)
+    y_R2 = LL2neg(u_tk.D_W2_R, p_tktd.e2_R, p_tktd.b2_R)
+    y_R = y_R1 * y_R2
+
+    y_H1 = LL2pos(u_tk.D_W1_H, p_tktd.e1_H, p_tktd.b1_H)
+    y_H2 = LL2pos(u_tk.D_W2_H, p_tktd.e2_H, p_tktd.b2_H)
+    y_H = y_H1 * y_H2
+
+    y_κ_pos_1 = LL2neg(u_tk.D_W1_κ_pos, p_tktd.e1_κ_pos, p_tktd.b1_κ_pos)
+    y_κ_pos_2 = LL2neg(u_tk.D_W2_κ_pos, p_tktd.e2_κ_pos, p_tktd.b2_κ_pos)
+    y_κ_pos = y_κ_pos_1 * y_κ_pos_2
+
+    y_κ_neg_1 = LL2neg(u_tk.D_W1_κ_neg, p_tktd.e1_κ_neg, p_tktd.b1_κ_neg)
+    y_κ_neg_2 = LL2neg(u_tk.D_W2_κ_neg, p_tktd.e2_κ_neg, p_tktd.b2_κ_neg)
+    y_κ_neg = y_κ_neg_1 * y_κ_neg_2
+
+    return (y_G, y_M, y_A, y_R, y_H, y_κ_neg, y_κ_pos)
 end
 
 """

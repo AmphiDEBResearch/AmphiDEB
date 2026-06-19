@@ -1,4 +1,11 @@
 function global_rules!(m)
+    m.aux.N = length(m.individuals)
+
+    m.u.glb.N_emb = 0 # set counters to 0
+    m.u.glb.N_lrv = 0
+    m.u.glb.N_mt = 0
+    m.u.glb.N_juv = 0
+    m.u.glb.N_ad = 0
     return nothing
 end
 
@@ -17,7 +24,6 @@ end
 @inline function stochastic_death(h, dt)::Bool
     return rand() > exp(-h * dt)
 end
-
 
 @inline function check_reproduction_period(time_since_last_repro, tau_R)::Bool
     return time_since_last_repro >= tau_R 
@@ -46,31 +52,48 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
         a.u.ind.metamorph = 0.
         a.u.ind.juvenile = 0.
         a.u.ind.adult = 0.
+
+        glb.N_emb += 1
+
     else
         if a.u.ind.H < p.ind.H_j1
+
             a.u.ind.embryo = 0.
             a.u.ind.larva = 1.
             a.u.ind.metamorph = 0.
             a.u.ind.juvenile = 0.
             a.u.ind.adult = 0.
+
+            glb.N_lrv += 1
+
         elseif (a.u.ind.H >= p.ind.H_j1) && (a.u.ind.E_mt >= 0)
             a.u.ind.embryo = 0.
             a.u.ind.larva = 0.
             a.u.ind.metamorph = 1.
             a.u.ind.juvenile = 0.
             a.u.ind.adult = 0.
+
+            glb.N_mt += 1
+
         elseif (a.u.ind.H >= p.ind.H_j1) && (a.u.ind.E_mt <= 0) && (a.u.ind.H < p.ind.H_p)
             a.u.ind.embryo = 0.
             a.u.ind.larva = 0.
             a.u.ind.metamorph = 0.
             a.u.ind.juvenile = 1.
             a.u.ind.adult = 0.
+
+            glb.N_juv += 1
+
         elseif (a.u.ind.H >= p.ind.H_j1) && (a.u.ind.E_mt <= 0) && (a.u.ind.H >= p.ind.H_p)
+
             a.u.ind.embryo = 0.
             a.u.ind.larva = 0.
             a.u.ind.metamorph = 0.
             a.u.ind.juvenile = 0.
             a.u.ind.adult = 1.
+
+            glb.N_ad += 1
+
         else
             error("Did not meet any of the life stage criteria - check criteria and state variables. \n X_emb=$(a.u.ind.X_emb), H=$(a.u.ind.H).")
         end

@@ -14,3 +14,5 @@ using StatsBase
 
 using Revise
 using AmphiDEB, AmphiDEB.EcotoxSystems
+
+norm(x) = x ./ sum(x)
