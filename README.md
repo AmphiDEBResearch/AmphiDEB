@@ -2,11 +2,7 @@
 
 
 [![CI](https://github.com/SimonHansul/AmphiDEB.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/SimonHansul/AmphiDEB.jl/actions/workflows/CI.yml)
-<<<<<<< HEAD
-[![codecov](https://codecov.io/gh/SimonHansul/AmphiDEB/graph/badge.svg?token=BL1CFR86M6)](https://codecov.io/gh/SimonHansul/AmphiDEB)
-=======
 [![codecov](https://codecov.io/gh/SimonHansul/AmphiDEB/graph/badge.svg?token=BL1CFR86M6)](https://codecov.io/gh/SimonHansul/AmphiDEB.jl)
->>>>>>> 8436734 (Update README.md)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 
