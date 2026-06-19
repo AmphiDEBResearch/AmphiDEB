@@ -7,16 +7,18 @@ using Parameters
 using Distributions
 using DataStructures
 import DataFrames: AbstractDataFrame
-using ComponentArrays, StaticArrays
+using ComponentArrays, StaticArrays # TODO: static arrays can probably go
 using OrdinaryDiffEq
 using StatsBase
 
-
 include("utils.jl") # various auxiliary functions
 
-# to precompile the model, we simulate the default parameters
-@compile_workload begin
-    p = deepcopy(params_M1)
+module FittingUtils
+
+    using ComponentArrays
+    using DataFrames
+    using Distributions
+    using Chain
 
     include("FittingUtils/losses.jl")
     include("FittingUtils/utils.jl")
@@ -42,6 +44,7 @@ module Model1
     include("Model1/rules.jl")
     include("Model1/callbacks.jl")
     include("Model1/derivatives.jl")
+    include("Model1/simulation.jl")
 end
 
 module Model2
