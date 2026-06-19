@@ -62,13 +62,17 @@ spc = ComponentVector(
     T_ref = 293.15, # reference 
     b_T = 40., # effect strength of temperature on resource allocation
 
+    h_b_aq = 1e-3, 
+    h_b_ter = 1e-3,
+
     watercontent_larvae = 0.9, 
     watercontent_juveniles = 0.75, 
 
     aux = ComponentVector(
         tau_R = 365., 
         h_S = 1e-3, 
-        S_rel_crit = 1/3
+        S_rel_crit = 1/3, 
+        a_max = Truncated(Normal(3650, 365), 0, Inf)
     )
 )
 

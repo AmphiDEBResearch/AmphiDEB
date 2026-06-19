@@ -4,11 +4,11 @@ Disengaged for `p.glb.food_dynamic = 0.`
 """
 function food_dynamics_firstorder!(du, u, p, t)::Nothing
     
-    @unpack dX_in_aq, k_V_aq, dX_in_ter, k_V_ter, food_dynamic = p
-    @unpack X_aq, X_ter = u
+    @unpack dX_in_aq, k_V_aq, dX_in_ter, k_V_ter, food_dynamic = p.glb
+    @unpack X_aq, X_ter = u.glb
 
-    du.X_aq = food_dynamic * (dX_in_aq - k_V_aq * X_aq)
-    du.X_ter = food_dynamic * (dX_in_ter - k_V_ter * X_ter )
+    du.glb.X_aq = food_dynamic * (dX_in_aq - k_V_aq * X_aq)
+    du.glb.X_ter = food_dynamic * (dX_in_ter - k_V_ter * X_ter )
 
     return nothing 
 end
@@ -299,7 +299,7 @@ end
 ODE system for embryos including global component.
 """
 function sys_embryo!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     embryo!(du, u, p, t)
 end
 
@@ -307,7 +307,7 @@ end
 ODE system for larvae including global component.
 """
 function sys_larva!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     larva!(du, u, p, t)
 end
 
@@ -315,7 +315,7 @@ end
 ODE system for metamorphs including global component.
 """
 function sys_metamorph!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     metamorph!(du, u, p, t)
 end
 
@@ -323,7 +323,7 @@ end
 ODE system for juveniles including global component.
 """
 function sys_juvenile!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     juvenile!(du, u, p, t)
 end
 
@@ -331,7 +331,7 @@ end
 ODE system for adults including global component.
 """
 function sys_adult!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     adult!(du, u, p, t)
 end
 
@@ -341,23 +341,23 @@ Suitable for use in IBM context.
 """
 function individual_ODE!(du, u, p, t)::Nothing
 
-    if u.ind.is_embryo > 0 
+    if u.ind.embryo > 0 
         embryo!(du, u, p, t)
     end
 
-    if u.ind.is_larva > 0
+    if u.ind.larva > 0
         larva!(du, u, p, t)
     end
 
-    if u.ind.is_metamorph > 0
+    if u.ind.metamorph > 0
         metamorph!(du, u, p, t)
     end
 
-    if u.ind.is_juvenile > 0
+    if u.ind.juvenile > 0
         juvenile!(du, u, p, t)
     end
 
-    if u.ind.is_adult > 0 
+    if u.ind.adult > 0 
         adult!(du, u, p, t)
     end
 
