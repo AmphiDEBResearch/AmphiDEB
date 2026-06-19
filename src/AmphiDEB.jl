@@ -26,6 +26,7 @@ end
 module Model1
 
     using EcotoxSystems, EcotoxModelFitting
+    using EcotoxSystems.IBM
     import ..FittingUtils
 
     using Parameters
@@ -38,6 +39,7 @@ module Model1
 
     include("Model1/parameters.jl")
     include("Model1/statevars.jl")
+    include("Model1/rules.jl")
     include("Model1/callbacks.jl")
     include("Model1/derivatives.jl")
 end

@@ -17,8 +17,7 @@ glb = ComponentVector(
     C_W1 = 0., # aquatic exposure concentrations of substance 1 [e.g. μg/L]
     C_W2 = 0., # aquatic exposure concentrations of substance 2 [e.g. μg/L]
     pathogen_inoculation_dose = 0., # amount of pathogen spores added to aquatic medium [# spores]
-    pathogen_inoculation_time = 30., # time-point of pathogen inoculation [t]
-    medium_renewals = [0.] # time-points on which media renewals occur; results in removal of spores
+    pathogen_inoculation_time = 30., # time-point of pathogen inoculation [d]
 )
 
 """
@@ -64,10 +63,16 @@ spc = ComponentVector(
     b_T = 40., # effect strength of temperature on resource allocation
 
     watercontent_larvae = 0.9, 
-    watercontent_juveniles = 0.75
+    watercontent_juveniles = 0.75, 
+
+    aux = ComponentVector(
+        tau_R = 365., 
+        h_S = 1e-3, 
+        S_rel_crit = 1/3
+    )
 )
 
-params = ComponentVector(glb = glb, spc = spc)
+defaultparams() = ComponentVector(glb = glb, spc = spc)
 
 function generate_individual_params(p; kwargs...)
 

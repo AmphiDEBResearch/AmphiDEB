@@ -1,44 +1,49 @@
-using Pkg; Pkg.activate("test")
+cd("lib/AmphiDEB.jl")
+include("boilerplate.jl")
 
-using Test
-using Distributions
-using OrdinaryDiffEq
+using AmphiDEB.Model1
+using AmphiDEB.EcotoxSystems.IBM
 
-using Plots, StatsPlots, Plots.Measures
-default(leg = false, lw = 1.5)
-
-include("testutils.jl")
-
-using DataFrames, DataFramesMeta
-using StatsBase
-using EcotoxSystems
-
-using Revise
-
-using AmphiDEB
-norm(x) = x ./ sum(x)
+Model1.global_rules!
 
 @testset "Uninhibited growth" begin
-    global p = deepcopy(defaultparams)
+    global p = Model1.defaultparams()
 
     p.glb.t_max = 450.
-    p.glb.dX_in = [1000., 1000.]
-    p.glb.k_V = [0., 0.]
+    p.glb.dX_in_aq = 1000.
+    p.glb.dX_in_ter = 1000.
+    p.glb.k_V_aq = 0.
+    p.glb.k_V_ter = 0.
+
     p.glb.N0 = 10
 
     p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
-    p.spc.tau_R = 1.
-    p.spc.h_S = 0.
-    p.spc.H_p = 50.
 
-    @time global sim = AmphiDEB.IBM_simulator(
+    # these settings are not realistic! only for testing purposes
+    p.spc.H_p = 50.  # maturity at puberty
+    p.spc.aux.tau_R = 1. # reproduction period
+    p.spc.aux.h_S = 0.   # hazard rate caused by loss of structure
+
+    @time sim = IBM.simulate(
         p; 
-        showinfo = 60,  # update every 30 days
-        saveat = 7, # saving weekly output
-        dt = 1/24, # daily timestep - better to turn down to hourly for proper results
-        record_individuals = false
-        )
-    
+        global_ode! = Model1.food_dynamics_firstorder!,
+        individual_ode! = Model1.individual_ODE!,
+
+        global_rules! = Model1.global_rules!,
+        individual_rules! = Model1.individual_rules!,
+
+        init_u_glb = Model1.initialize_global_statevars,
+        init_u_ind = Model1.initialize_individual_statevars,
+        gen_p_ind = Model1.generate_individual_params,
+
+        N0 = 10, 
+        record_individuals = true, 
+        saveat = 1/24, 
+        dt = 1/24
+    )
+
+
+ 
     #@test 2500 <= sim.glb.N[end] <= 3500 # expected abundance after 2 years
 
     p_glb = @df sim.glb plot(

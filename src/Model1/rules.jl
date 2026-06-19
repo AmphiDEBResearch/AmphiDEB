@@ -1,3 +1,7 @@
+function global_rules!(m)
+    m.aux.N = length(m.individuals) # tracking population size
+    return nothing
+end
 
 @inline function determine_S_max_hist(S, S_max_hist)
     return max(S, S_max_hist)
@@ -23,13 +27,18 @@ end
     return trunc(R / X_emb_int)
 end
 
-function default_individual_rules!(a, m)::Nothing
+function individual_rules!(a, m)::Nothing
 
     @unpack glb,ind = a.u
     du = a.du
     p = a.p
 
     ind.age += m.dt
+
+    # ======================================================== #
+    # Determining the current life stage
+    # This is handled by callbacks in the pure-ODE version
+    # ======================================================== #
 
     if a.u.ind.X_emb > 0
         a.u.ind.is_embryo = 1.
@@ -56,20 +65,31 @@ function default_individual_rules!(a, m)::Nothing
             a.u.ind.is_metamorph = 0.
             a.u.ind.is_juvenile = 1.
             a.u.ind.is_adult = 0.
-        elseif (a.u.ind.H >= p.u.ind.H_j1) && (a.u.ind.E_mt <= 0) && (a.u.ind.H < p.u.ind.H_p)
-
-
+        elseif (a.u.ind.H >= p.u.ind.H_j1) && (a.u.ind.E_mt <= 0) && (a.u.ind.H >= p.u.ind.H_p)
+            a.u.ind.is_embryo = 0.
+            a.u.ind.is_larva = 0.
+            a.u.ind.is_metamorph = 0.
+            a.u.ind.is_juvenile = 0.
+            a.u.ind.is_adult = 1.
+        else
+            error("Did not meet any of the life stage criteria - check criteria and state variables. \n X_emb=$(a.u.ind.X_emb), H=$(a.u.ind.H).")
         end
     end
 
-    # death due to aging
+    # ======================================================== #
+    # Mortality
+    # ======================================================== #
+
+    # ---- aging
+
     if death_by_aging(ind.age, p.ind.a_max)
         ind.cause_of_death = 1.
         glb.aging_mortality += 1
     end
 
-    # life-stage transitions are part of ODE in amphibian model and omitted here
-    
+
+    # ---- starvation (loss of structure)
+
     # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
     ind.S_max_hist = determine_S_max_hist(ind.S, ind.S_max_hist)
@@ -79,13 +99,19 @@ function default_individual_rules!(a, m)::Nothing
         glb.starvation_mortality += 1
     end
 
-    # mortality caused by GUTS submodule, including background mortality
+    # ---- direct lethal toxicity (GUTS-RED-SD) 
+    # ---- TODO: currently includes background mortality; background mort. should be its own mortality submodule
+    
     if death_by_GUTS(ind.h_z, m.dt)
         ind.cause_of_death = 3.
         glb.GUTS_mortality += 1
     end
 
-    # --- reproduction based on a constant reproduction period
+    # ======================================================== #
+    # Reproduction
+    # Assuming a very simple rule: 
+    # Constant 
+    # ======================================================== #
 
     # reproduction only occurs if the reproduction period has been exceeded
     if check_reproduction_period(u.ind.aux.time_since_last_repro, p.ind.aux.tau_R) 
