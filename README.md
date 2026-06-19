@@ -17,24 +17,20 @@ Explicitly **not** within the scope of this package:
 
 ## Model variants
 
-The package implements two model variants, `M1` is currently the default. 
-`M1` tends to be easier to fit to data (at least with the current routines), but some might argue that is less biologically coherent, 
-because metamorphs (Gosner stage 42-46) still ingest some food, while it is common wisdom that food ingestion stops during metamorphic climax. <br> 
-However, considering studies that actually attempted to measure ingestion rates throughout metamorphosis, the idea of a residual ingestion flux does not appear entirely absurd either (cf. Pfab et al. (2020)).
-
-`M2` is more biologically sound, but robust calibration routines are work in progress.
-
-### M1 
-
-- Larvae build up reserves at rate $\gamma (\kappa \dot{A} - \dot{M})$
+### Model1 
+  
+- Embryos, juveniles and adult follow default DEBkiss assumptions
+- Larvae build up a reserve buffer $E^{mt}$ at rate $\gamma (\kappa \dot{A} - \dot{M})$, which is defined as the biomass that will be consumed during metamorphosis.
 - Metamorphs deplete reserve at rate $-(\dot{M} + \dot{H} + \dot{J})$ (the obligatory fluxes)
-- Metamorphs are allowed to have a residual food ingestion flux $\dot{I}^{mt} \propto \dfrac{E^{mt}}{E^{mt}_{max}}$, which decreases as reserve is depleted. The residual assimilation flux is exclusively used to build new structure.
+- During metmamorphosis $\dot{I}^{mt} \propto \dfrac{E^{mt}}{E^{mt}_{max}}$, which decreases as reserve is depleted. The residual assimilation flux is exclusively used to build new structure.
+- An analysis based on this model was [published as pre-print](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6115398) and two peer-reviewed publications based on this model are currently in review (2026-06-19)
 
-### M2
+### Model2
 
-- Larval stage identical to M1
-- Feeding rate for metamorphs immediately drops to 0
-- Simplifying assumptions: $\dot{S} = 0$ during climax.
+- Larvae are identical to Model1
+- Ingestion rates for metamorphs drop to 0 immediately.
+- Reserve buffer $E^{mt}$ is mobilized at a constant first-order rate $k_C$ until empty, up to a regularization constant
+
 
 ## References
 
