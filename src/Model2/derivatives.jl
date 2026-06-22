@@ -64,7 +64,7 @@ end
 ODE system for embryos including global component.
 """
 function sys_embryo!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     embryo!(du, u, p, t)
 end
 
@@ -72,7 +72,7 @@ end
 ODE system for larvae including global component.
 """
 function sys_larva!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     larva!(du, u, p, t)
 end
 
@@ -80,7 +80,7 @@ end
 ODE system for metamorphs including global component.
 """
 function sys_metamorph!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     metamorph!(du, u, p, t)
 end
 
@@ -88,7 +88,7 @@ end
 ODE system for juveniles including global component.
 """
 function sys_juvenile!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     juvenile!(du, u, p, t)
 end
 
@@ -96,7 +96,7 @@ end
 ODE system for adults including global component.
 """
 function sys_adult!(du, u, p, t)::Nothing
-    food_dynamics_firstorder!(du.glb, u.glb, p.glb, t)
+    food_dynamics_firstorder!(du, u, p, t)
     adult!(du, u, p, t)
 end
 

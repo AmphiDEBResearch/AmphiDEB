@@ -1,8 +1,9 @@
 import ..Model1: tktdparams_binary_loglogistic
+
 """
 Global parameters with defaults.
 """
-glb = ComponentVector(
+glb() = ComponentVector(
     t_max = 3 * 365., # max simulation time (real simulation time can be shorter when callbacks are triggered) [d]
     N0 = 1., # initial number of individuals (always 0 for pure-ODE system) [#]
     food_dynamic = 1., # boolean indicator of whether food abundance is treated as a dynamic variable [-]
@@ -24,7 +25,7 @@ glb = ComponentVector(
 """
 Species-specific parameters with defaults.
 """
-spc = ComponentVector(
+spc() = ComponentVector(
 
     #=
     Metaparameters
@@ -63,18 +64,18 @@ spc = ComponentVector(
     T_A = 8000., # Arrhenius temperature (K) 
     T_ref = 293.15, # reference 
     b_T = 40., # effect strength of temperature on resource allocation
+    
+    tktd = tktdparams_binary_loglogistic(),
 
     watercontent_larvae = 0.9, 
     watercontent_juveniles = 0.75, 
-
-    tktd = tktdparams_binary_loglogistic(),
 
     aux = ComponentVector(
         ϵ_Emt = 1e-3, # tail regularization parameter for froglet emergence
     )
 )
 
-defaultparams() = ComponentVector(glb = glb, spc = spc)
+defaultparams() = ComponentVector(glb = glb(), spc = spc())
 
 function generate_individual_params(p; kwargs...)
 
