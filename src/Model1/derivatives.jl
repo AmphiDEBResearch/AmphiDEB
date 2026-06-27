@@ -141,7 +141,7 @@ function larva!(du, u, p, t;
     dE_mt_max = dE_mt
     dH = max(0, (1 - kappa_T) * dA - dJ)
 
-    du.glb.X_aq -= dI
+    du.glb.X_aq -= (dI * p.glb.food_dynamic)
     du.glb.X_ter = 0.
     du.ind.X_emb = 0.
     du.ind.I = dI
@@ -170,7 +170,7 @@ function metamorph!(
     # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
     u = max.(0, u)
 
-    @unpack T_aq, V_patch_aq, food_dynamic = p.glb
+    @unpack T_aq, V_patch_aq = p.glb
     @unpack dI_max_lrv, eta_IA, eta_AS_emb, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, delta_E, delta_k_M_mt, T_A = p.ind
     @unpack X_aq = u.glb
     @unpack E_mt, E_mt_max, S, H = u.ind
@@ -188,7 +188,7 @@ function metamorph!(
     dH = max(0, ((1 - kappa_T) * dM) / kappa_T - dJ)
     dE_mt = -(dH + dJ + dM)/delta_E
     
-    du.glb.X_aq -= (food_dynamic * dI)
+    du.glb.X_aq -= (dI * p.glb.food_dynamic)
     du.glb.X_ter = 0.
     du.ind.X_emb = 0.
     du.ind.I = dI
