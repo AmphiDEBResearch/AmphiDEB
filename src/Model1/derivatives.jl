@@ -130,8 +130,7 @@ function larva!(du, u, p, t;
         y_G * y_GP * eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM),
         -(dM / eta_SA - kappa_T * dA)
     )
-
-
+    
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
         eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM),

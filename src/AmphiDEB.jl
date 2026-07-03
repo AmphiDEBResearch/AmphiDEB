@@ -85,4 +85,25 @@ module Model2b
 
 end
 
+
+module Model2c
+    using EcotoxSystems, EcotoxModelFitting
+    import ..FittingUtils
+
+    using Parameters
+    using Distributions
+    using DataStructures
+    import DataFrames: AbstractDataFrame
+    using ComponentArrays, StaticArrays
+    using OrdinaryDiffEq
+    using StatsBase
+
+    include("Model2c/parameters.jl")
+    include("Model2c/statevars.jl")
+    include("Model2c/callbacks.jl")
+    include("Model2c/derivatives.jl")
+
+end
+
+
 end # module AmphiDEB
