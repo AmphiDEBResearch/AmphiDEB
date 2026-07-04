@@ -13,6 +13,7 @@ using StatsBase
 
 include("utils.jl") # various auxiliary functions
 
+
 module FittingUtils
 
     using ComponentArrays
@@ -103,6 +104,25 @@ module Model2c
     include("Model2c/callbacks.jl")
     include("Model2c/derivatives.jl")
 
+end
+
+module Model3
+    using EcotoxSystems, EcotoxModelFitting
+    import ..FittingUtils
+    import ..AmphiDEB: sabs, smax
+
+    using Parameters
+    using Distributions
+    using DataStructures
+    import DataFrames: AbstractDataFrame
+    using ComponentArrays, StaticArrays
+    using OrdinaryDiffEq
+    using StatsBase
+
+    include("Model3/parameters.jl")
+    include("Model3/statevars.jl")
+    include("Model3/callbacks.jl")
+    include("Model3/derivatives.jl")
 end
 
 

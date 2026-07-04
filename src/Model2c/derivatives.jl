@@ -24,6 +24,21 @@ function isoutofdomain(u, p, t)
     return u.ind.S < 0
 end
 
+"""
+Smooth absolute function. 
+Parameter λ controls the "smoothness".
+"""
+function sabs(x; λ = 1e-6)
+    return sqrt(x^2 + λ)
+end
+
+"""
+Smooth maximum function.
+Parameter λ controls the "smoothness" via sabs.
+"""
+function smax(a, b; λ = 1e-6)
+    return (a+b+sabs(a-b; λ = λ))/2
+end
 
 """
 Simulate embryo from initialization to birth.
@@ -134,13 +149,11 @@ function metamorph!(
 
     dI = 0.
     dA = 0.
-    dM = (S * k_M_emb) * y_M * y_MP * yT
-    dM_Emt = (E_mt * k_M_Emt) * y_M * y_MP * yT
+    dM = ((S * k_M_emb) + (E_mt * k_M_Emt)) * y_M * y_MP * yT
     dJ = (H * k_J_emb * y_M * y_MP * yT) # maintenance costs for larval maturity
 
     dC = k_T * E_mt * yT # active mobilization flux
     dE_mt = -dC # TBD: add efficiency `/eta_EC` here? 
-
 
     dH = -dC  # larval maturity decreases according to a fixed rate
     dH = (1 - kappa_T) * dC - dJ # juvenile maturity is built during metamorphosis
