@@ -65,6 +65,10 @@ function froglet_emergence_affect!(integrator)
     integrator.u.ind.metamorph = 0.
     integrator.u.ind.juvenile = 1.
     integrator.u.ind.adult = 0.
+
+    # at emergence, froglets convert remaining reserve buffer to structure
+    integrator.u.ind.S += integrator.u.ind.E_mt
+    integrator.u.ind.E_mt = 0.
 end
 
 function froglet_emergence_affect_terminal!(integrator)

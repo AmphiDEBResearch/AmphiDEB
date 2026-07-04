@@ -176,10 +176,9 @@ function metamorph!(
     dA = dI * eta_IA * y_A * y_AP
     dM = S * k_M_emb * y_M * y_MP * yT
     dJ = ((E_mt * k_J_emb) + (H * k_J_juv)) * y_M * y_MP * yT
-    dH = max(0, ((1 - kappa_T) * dM) / kappa_T - dJ)
     
-    dE_mt = -k_C * E_mt # reserve buffer decreases
-    dC = eta_IA * (dI + dE_mt) * yT # mobliziation flux equals ingestion + reserve buffer mobilization
+    dE_mt = -k_C * eta_IA * E_mt # reserve buffer decreases
+    dC = (dI + dE_mt) * yT # mobliziation flux equals ingestion + reserve buffer mobilization
     dS = eta_AS_emb * y_G * ((kappa_T * dC) - dM)
     dH = ((1-kappa_T) * dC) - dJ
 
@@ -205,6 +204,7 @@ ODE component for the juvenile life stage.
 """
 function juvenile!(
     du, u, p, t; 
+    fX = 1.,
     y_G = 1., y_GP = 1.,
     y_A = 1., y_AP = 1.,
     y_M = 1., y_MP = 1.,
@@ -510,15 +510,34 @@ end
 """
 Simulate model variant without κ and first-order mobilization of E_mt.
 This is inspired by the DEBlipis model (Martin et al. 2017), in the sense that the maturity takes over the role of a buffer compartment (E_mt).
+
+## Model assumptions
+
 During metamorphosis, we assume that E_mt is mobilized according to first-order kinetics and that size-specific ingestion rate dI_max drop at the same relative rate,
-leading to exponential decline of both E_mt and dI_max. 
+leading to exponential decline of both E_mt and dI_max.
+
+Froglet emergence is triggered when E_mt falls below a threshold value of H_j2. The emerging froglets behave like a standard DEBkiss organism (for now).
+Because E_mt does not play a role in standard DEBkiss, we make the simplifying assumption that froglets convert the residual E_mt to structure at emergence.
 
 The combined mobilized flux E_mt + dI_max is disributed according to the κ-rule.
 Maturity is built up during metamorphosis according to standard DEB(kiss) dynamics.
 
+## args
+
+- p: Parameter vector. see defaultparams() function.
+
+## kwargs
+
+kwargs are handed over to the life stage-specific simulators.
+
+- `saveat`: time points or intervals to save at. default is `[]` (let the solver decide)
+- `alg`: ODE solver. See documentation of `DifferentialEquations.jl`. Reasonable choices are, for example, `Tsit5()` and `Rodas5P()`. Default is `Rodas5P()` (Steinebach, 2022).
+
 ## References
 
 Martin, B. T., Heintz, R., Danner, E. M., & Nisbet, R. M. (2017). Integrating lipid storage into general representations of fish energetics. Journal of Animal Ecology, 86(4), 812-825.
+
+Steinebach, G. (2023). Construction of Rosenbrock–Wanner method Rodas5P and numerical benchmarks within the Julia Differential Equations package. BIT Numerical Mathematics, 63(2), 27.
 """
 function sim_all(p; kwargs...)
 
