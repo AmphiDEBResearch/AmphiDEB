@@ -8,7 +8,7 @@ import ..AmphiDEB.Model2: larva!
 #import ..AmphiDEB.Model2: metamorph!
 #import ..AmphiDEB.Model2: juvenile!
 import ..AmphiDEB.Model2: adult!
-#import ..AmphiDEB.Model2: sys_embryo!
+import ..AmphiDEB.Model2: sys_embryo!
 import ..AmphiDEB.Model2: sys_larva!
 #import ..AmphiDEB.Model2: sys_metamorph!
 #import ..AmphiDEB.Model2: sys_juvenile!
@@ -41,23 +41,45 @@ function smax(a, b; λ = 1e-6)
 end
 
 """
-Simulate embryo from initialization to birth.
-""" 
-function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false)
+ODE component for the embryonic life stage.
+"""
+function embryo!(
+    du, u, p, t; 
+    y_G = 1., y_GP = 1., 
+    y_M = 1., y_MP = 1.,
+    y_A = 1., y_AP = 1.
+    )::Nothing
 
-    p_ind = generate_individual_params(p)
-    u0 = initialize_statevars(p_ind)
-    tspan = (0,p.glb.t_max)
+    # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
+    u = max.(0, u)
 
-    prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    @unpack T_aq, food_dynamic = p.glb
+    @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb, gamma = p.ind
+    @unpack S, H = u.ind
 
-    if return_sol
-        return sol, sol.u[end], p_ind
-    end
+    yT = y_T(T_A, T_ref, T_aq)
 
-    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+    dI = S^(2/3) * dI_max_emb * yT
+    dA = eta_IA * y_A * y_AP * dI
+    dM = (S * k_M_emb + E_mt * k_M_EMt) * y_M * y_MP * yT
+    dJ = H * k_J_emb * y_M * y_MP * yT
+    dS = y_G * y_GP * eta_AS_emb * (1-gamma) * (kappa_emb * dA - dM)
+    dE_mt = y_G * y_GP * eta_AS_emb * (gamma) * (kappa_emb * dA - dM)
+    dH =  max(0, (1 - kappa_emb) * dA - dJ)
+    
+    du.ind.X_emb = -dI
+    du.ind.I = dI
+    du.ind.M = dM
+    du.ind.J = dJ
+    du.ind.S = dS
+    du.ind.R = 0.
+    du.ind.H = dH
+    du.ind.E_mt = dE_mt
+    du.ind.E_mt_max = dE_mt_max
+
+    return nothing
 end
+
 
 """
 ODE component for the larval life stage.
@@ -140,22 +162,22 @@ function metamorph!(
     u = max.(0, u)
 
     @unpack T_aq, V_patch_aq = p.glb
-    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_M_Emt, k_J_emb, k_J_juv, k_T, T_A = p.ind
+    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_M_Emt, k_J_emb, k_J_juv, k_C, T_A, eta_E = p.ind
     @unpack X_aq = u.glb
     @unpack E_mt, E_mt_max, S, H = u.ind
 
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq)
     yT = y_T(T_A, T_ref, T_aq)
 
-    dI = 0.
-    dA = 0.
+    dI_max_t = dI_max_lrv * (E_mt / E_mt_max)
+    dI = dI_max_lrv * dI_max_t
+    dA = eta_IA * dI
     dM = ((S * k_M_emb) + (E_mt * k_M_Emt)) * y_M * y_MP * yT
     dJ = (H * k_J_emb * y_M * y_MP * yT) # maintenance costs for larval maturity
 
-    dC = k_T * E_mt * yT # active mobilization flux
-    dE_mt = -dC # TBD: add efficiency `/eta_EC` here? 
-
-    dH = -dC  # larval maturity decreases according to a fixed rate
+    dE_mt = k_Cs * E_mt * yT # mobilization from reserve buffer 
+    dC = dA + k_Cs * E_mt * yT * eta_E # available reserve flux
+    
     dH = (1 - kappa_T) * dC - dJ # juvenile maturity is built during metamorphosis
     
     dS = Base.ifelse( 
@@ -277,6 +299,34 @@ function adult!(du, u, p, t;
 end
 
 
+
+"""
+ODE system for embryos including global component.
+"""
+function sys_embryo!(du, u, p, t)::Nothing
+    food_dynamics_firstorder!(du, u, p, t)
+    embryo!(du, u, p, t)
+end
+
+"""
+Simulate embryo from initialization to birth.
+""" 
+function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false)
+
+    p_ind = generate_individual_params(p)
+    u0 = initialize_statevars(p_ind)
+    tspan = (0,p.glb.t_max)
+
+    prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
+    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+
+    if return_sol
+        return sol, sol.u[end], p_ind
+    end
+
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+end
+
 function sys_metamorph!(du, u, p, t)
     food_dynamics_firstorder!(du, u, p, t)
     metamorph!(du, u, p, t)
@@ -353,6 +403,16 @@ end
 
 """
 Simulate all life stages consecutively as separate ODE systems.
+
+
+## Model assumptions
+
+This model version assumes first-order dynamics of reser buffer usage during metamorphosis.
+Larval maturity is re-set to 0 at climax, juvenile maturity is re-built during climax.
+Investment in E_mt starts at fertilization, not birth.
+E_mt is associated with some maintenance costs.
+Froglet emergence is triggered by a lower boundary for E_mt.
+
 """
 function sim_all(p; kwargs...)
 

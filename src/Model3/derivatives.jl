@@ -75,7 +75,7 @@ function embryo!(
     dM = S * k_M_emb * y_M * y_MP * yT
     dJ = E_mt * k_J_emb * y_M * y_MP * yT
     dS = y_G * y_GP * eta_AS_emb * (kappa_emb * dA - dM)
-    dE_mt =  smax(0, (1 - kappa_emb) * dA - dJ)
+    dE_mt = smax(0, (1 - kappa_emb) * dA - dJ)
     
     du.ind.X_emb = -dI
     du.ind.I = dI
@@ -163,7 +163,7 @@ function metamorph!(
     u = max.(0, u)
 
     @unpack T_aq, V_patch_aq = p.glb
-    @unpack dI_max_lrv, eta_IA, eta_AS_emb, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, k_J_juv, k_C, T_A = p.ind
+    @unpack dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, b_T, T_ref, K_X_lrv, k_M_emb, k_J_emb, k_J_juv, k_C, T_A = p.ind
     @unpack X_aq = u.glb
     @unpack E_mt, E_mt_max, H,  S = u.ind
 
@@ -179,7 +179,11 @@ function metamorph!(
     
     dE_mt = -k_C * eta_IA * E_mt # reserve buffer decreases
     dC = (dI + dE_mt) * yT # mobliziation flux equals ingestion + reserve buffer mobilization
-    dS = eta_AS_emb * y_G * ((kappa_T * dC) - dM)
+    dS =  Base.ifelse( 
+        kappa_T * dA >= dM, 
+        y_G * y_GP * eta_AS_emb * (kappa_T * dA - dM),
+        -(dM / eta_SA - kappa_T * dA), 
+    )
     dH = ((1-kappa_T) * dC) - dJ
 
     du.glb.X_aq -= (dI * p.glb.food_dynamic)

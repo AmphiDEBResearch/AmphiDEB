@@ -118,11 +118,13 @@ module Model3
     using ComponentArrays, StaticArrays
     using OrdinaryDiffEq
     using StatsBase
+    using DataFrames
 
     include("Model3/parameters.jl")
     include("Model3/statevars.jl")
     include("Model3/callbacks.jl")
     include("Model3/derivatives.jl")
+    include("Model3/traits.jl")
 end
 
 
