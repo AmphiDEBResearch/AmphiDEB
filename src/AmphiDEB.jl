@@ -86,7 +86,6 @@ module Model2b
 
 end
 
-
 module Model2c
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -103,7 +102,27 @@ module Model2c
     include("Model2c/statevars.jl")
     include("Model2c/callbacks.jl")
     include("Model2c/derivatives.jl")
+end
 
+
+module Model2d
+    using EcotoxSystems, EcotoxModelFitting
+    import ..FittingUtils
+
+    using Parameters
+    using Distributions
+    using DataStructures
+    import DataFrames: AbstractDataFrame
+    using ComponentArrays, StaticArrays
+    using OrdinaryDiffEq
+    using StatsBase
+    using DataFrames
+
+    include("Model2d/parameters.jl")
+    include("Model2d/statevars.jl")
+    include("Model2d/callbacks.jl")
+    include("Model2d/derivatives.jl")
+    include("Model2d/traits.jl")
 end
 
 module Model3

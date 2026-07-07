@@ -48,7 +48,7 @@ spc() = ComponentVector(
     eta_AS_juv = 0.4, # juvenile and adult growth efficiency; initially assumed eval to eta_AS_emb [-]
     eta_AR = 0.95, # reproduction efficiency; default value is suggested value from DEBkiss book and also the default in add-my-pet [-]
     eta_SA = 0.8, # shrinking efficiency [-]
-    eta_C = 0.8, # efficiency of mobilizing E_mt [-]
+    eta_E = 0.8, # efficiency of mobilizing E_mt [-]
     k_M_emb = 0.055, # embryonic to metamorph somatic maintenance rate constant; default value from Pfab et al. (2020) divided by 2 to account for addition of k_M_Emt with default value of γ = 0.5 [d^-1]
     k_M_Emt = 0.055, # maintenance rate constant associated with metamorph buffer E_mt [d^-1]
     k_M_juv = 0.11, # juvenile and adult somatic maintenance rate constant; initially assumed equal to k_M_emb

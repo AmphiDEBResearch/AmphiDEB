@@ -35,8 +35,7 @@ metamorphosis_terminal = ContinuousCallback(
 )
 
 function froglet_emergence_condition(u, t, integrator)
-    E_mt_j2 = integrator.p.ind.E_mt_j2_rel * u.ind.E_mt_max
-    u.ind.E_mt - integrator.p.ind.E_mt_j2
+    u.ind.E_mt
 end
 
 function froglet_emergence_affect!(integrator)
