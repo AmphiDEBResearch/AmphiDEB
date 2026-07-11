@@ -55,9 +55,8 @@ spc() = ComponentVector(
     k_J_emb = 0.027, # embryonic to metamorph maturity maintenance rate constant; initially calculated based on (1-kappa)/kappa-ratio
     k_J_juv = 0.027, # juvenile and adult maturity maintenance rate constant; initially assumed equal to k_J_emb
     H_j1 = 1, # maturity at the start of climax [mg]
-    E_mt_j2_rel = 1e-3, # reserve buffer level at end of climax, relative to level at climax [-]
     H_p = 55., # maturity at puberty
-    k_C = 0.2, # maturity decomposition rate, assumed to represent decline in TH levels during climax [d^-1]
+    k_C = 0.2, # first-order rate for mobilization of E_mt, in addition to maintenance costs; somatic growth and maturation have to be paid from first-order mobilization [d^-1]
 
     T_A = 8000., # Arrhenius temperature (K) 
     T_ref = 293.15, # reference 

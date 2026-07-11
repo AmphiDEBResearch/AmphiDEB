@@ -177,9 +177,8 @@ function metamorph!(
     dM = ((S * k_M_emb) + (E_mt * k_M_Emt)) * y_M * y_MP * yT
     dJ = (H * k_J_emb * y_M * y_MP * yT) # maintenance costs for larval maturity
 
-    dE_mt = -(dM + dJ + k_C * E_mt * yT) # mobilization from reserve buffer is maintenance costs + first-order rate
+    dE_mt = -(k_C * (E_mt + S)) # mobilization from reserve buffer is maintenance costs + first-order rate
     dC = (-dE_mt * eta_E) + dA # total available resource flux is reserve mobilization + residual assimilation
-
     dH = smax(0, (1 - kappa_T) * dC - dJ) # juvenile maturity is built during metamorphosis
     
     dS = Base.ifelse( 
@@ -236,6 +235,7 @@ function juvenile!(
         y_G * y_GP * eta_AS_juv * (kappa_T * dA - dM),
         -(dM / eta_SA - kappa_T * dA), 
     )    
+    dH = smax(0., (1 - kappa_T) * dA - dJ)
 
     du.glb.X_aq = 0.
     du.glb.X_ter -= (food_dynamic * dI)
@@ -247,7 +247,7 @@ function juvenile!(
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
-    du.ind.H = 0.
+    du.ind.H = dH
     du.ind.R = 0.
 
     return nothing
@@ -310,25 +310,6 @@ function sys_embryo!(du, u, p, t)::Nothing
     embryo!(du, u, p, t)
 end
 
-"""
-Simulate embryo from initialization to birth.
-""" 
-function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false)
-
-    p_ind = generate_individual_params(p)
-    u0 = initialize_statevars(p_ind)
-    tspan = (0,p.glb.t_max)
-
-    prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
-
-    if return_sol
-        return sol, sol.u[end], p_ind
-    end
-
-    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
-end
-
 function sys_metamorph!(du, u, p, t)
     food_dynamics_firstorder!(du, u, p, t)
     metamorph!(du, u, p, t)
@@ -352,14 +333,33 @@ function sys_adult!(du, u, p, t)::Nothing
 end
 
 """
+Simulate embryo from initialization to birth.
+""" 
+function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false, kwargs...)
+
+    p_ind = generate_individual_params(p)
+    u0 = initialize_statevars(p_ind)
+    tspan = (0,p.glb.t_max)
+
+    prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
+    sol = solve(prob, alg; callback = birth_terminal, saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
+
+    if return_sol
+        return sol, sol.u[end], p_ind
+    end
+
+    return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
+end
+
+"""
 Simulate larva from birth to metamorphosis.
 """
-function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P())
+function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
 
     tspan = (0,p_ind.glb.t_max)
     
     prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
-    sol = solve(prob, callback = metamorphosis_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    sol = solve(prob, alg; callback = metamorphosis_terminal, saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
     
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
@@ -367,12 +367,12 @@ end
 """
 Simulate metamorph from metamorphosis (Gosner 42) to froglet emergence (Gosner 46)-
 """
-function sim_metamorph(p_ind, u0; saveat = [], alg = Rodas5P())
+function sim_metamorph(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
 
     tspan = (0,p_ind.glb.t_max)
 
     prob = ODEProblem(sys_metamorph!, u0, tspan, p_ind)
-    sol = solve(prob, callback = froglet_emergence_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    sol = solve(prob, alg; callback = froglet_emergence_terminal, saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind 
 end
@@ -380,12 +380,12 @@ end
 """
 Simulate juvenile from froglet emergence (Gosner 46) to puberty.
 """
-function sim_juvenile(p_ind, u0; saveat = [], alg = Rodas5P())
+function sim_juvenile(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
 
     tspan = (0,p_ind.glb.t_max)
 
-    prob = ODEProblem(sys_juvenile!, u0, tspan, p_ind, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
-    sol = solve(prob, callback = puberty_terminal)
+    prob = ODEProblem(sys_juvenile!, u0, tspan, p_ind)
+    sol = solve(prob, alg; callback = puberty_terminal, saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
@@ -393,12 +393,12 @@ end
 """
 Simulate adult from puberty to pre-defined maximum time `p.glb.t_max`.
 """
-function sim_adult(p_ind, u0; saveat = [], alg = Rodas5P())
+function sim_adult(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
 
     tspan = (0,p_ind.glb.t_max)
 
     prob = ODEProblem(sys_adult!, u0, tspan, p_ind)
-    sol = solve(prob, alg = alg, saveat = saveat, isoutofdomain = isoutofdomain)
+    sol = solve(prob, alg; saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
 
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
@@ -411,19 +411,19 @@ Simulate all life stages consecutively as separate ODE systems.
 This model version assumes first-order dynamics of reser buffer usage during metamorphosis.
 Larval maturity is re-set to 0 at climax, juvenile maturity is re-built during climax.
 Investment in `E_mt` starts at fertilization, not birth, accounting for the fact that some of the structures which are mobilized during metamorphosis already exist at birth.
-`E_mt` is associated with some maintenance costs, accounting for the fact that some of the tissues which are mobilized during metamorphosis require maintenance.
+
+`E_mt` is associated with some maintenance costs, accounting for the fact that some of the tissues which are mobilized during metamorphosis require maintenance. 
+This shifts the interpretatation of `E_mt` towards a compartmentalization of structure. 
+A plausible model simplification is to calculate the maintenance costs for `E_mt` from γ and `k_M`.
+
 The mobilization of `E_mt` is associated with an efficiency `eta_E`.
 Froglet emergence is triggered by a lower boundary for `E_mt`.
-
-The mobilization of `E_mt` is the sum of maintenance costs and a first-order mobilization rate.
-The allocation to soma and maturity is then re-calculated according to the κ-rule.
-Compared to using only a first-order mobilization rate and then simply applying the κ-rule, 
-this has the advantage that `E_mt` is guaranteed to reach 0 and we do not need an addition parameter 
-to trigger froglet emergence. 
 
 Like in `Model1`, the decline in ingestion rates follows the decline in `E_mt`. 
 It is therefore guaranteed that the ingestion rates hit 0. 
 The decline in ingestion rates is steeper than in `Model1`, aligning the model better with the biological observation that GI tract is dysfunctional from GS43 onward.
+
+The sum of the residual ingestion rate and mobliized reserve buffer are distributed according to the κ-rule.
 """
 function sim_all(p; kwargs...)
 
