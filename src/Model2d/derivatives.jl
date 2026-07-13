@@ -116,18 +116,19 @@ function larva!(du, u, p, t;
     dM = (S * k_M_emb + E_mt * k_M_Emt) * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
 
+    # TBD: should be dM/((1 - gamma) * eta_SA)?
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
         y_G * y_GP * eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM),
-        -(dM / eta_SA - kappa_T * dA)
+        -(dM / eta_SA - (1 - gamma) * kappa_T * dA)
     )
 
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
         eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM),
-        -(dM / eta_SA - (1 - gamma) * kappa_T * dA)
+        -(dM / eta_SA - gamma * kappa_T * dA)
     )
-
+    
     dE_mt_max = dE_mt
     dH = max(0, (1 - kappa_T) * dA - dJ)
 

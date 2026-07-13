@@ -5,7 +5,7 @@
 Calculate maximum structural weight for larvae. 
 """
 function get_Smax_lrv(spc)
-    return ((spc.kappa_emb * (1 - spc.gamma) * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
+    return ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
 end
 
 """
