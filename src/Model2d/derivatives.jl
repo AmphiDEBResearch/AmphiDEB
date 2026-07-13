@@ -61,10 +61,11 @@ function embryo!(
 
     dI = S^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
-    dM = (S * k_M_emb + E_mt * k_M_Emt) * y_M * y_MP * yT
+    dM = S * k_M_emb * y_M * y_MP * yT
+    dM_E = E_mt * k_M_Emt * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
-    dS = y_G * y_GP * eta_AS_emb * (1-gamma) * (kappa_emb * dA - dM)
-    dE_mt = y_G * y_GP * eta_AS_emb * (gamma) * (kappa_emb * dA - dM)
+    dS = y_G * y_GP * eta_AS_emb * ((1-gamma) * kappa_emb * dA - dM)
+    dE_mt = y_G * y_GP * eta_AS_emb * ((gamma) * kappa_emb * dA - dM_E)
     dE_mt_max = dE_mt
     dH =  max(0, (1 - kappa_emb) * dA - dJ)
     
@@ -113,20 +114,20 @@ function larva!(du, u, p, t;
 
     dI = fX * dI_max_lrv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
-    dM = (S * k_M_emb + E_mt * k_M_Emt) * y_M * y_MP * yT
+    dM = S * k_M_emb * y_M * y_MP * yT
+    dM_E = E_mt * k_M_Emt * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
 
-    # TBD: should be dM/((1 - gamma) * eta_SA)?
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        y_G * y_GP * eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM),
+        y_G * y_GP * eta_AS_emb * ((1 - gamma) * kappa_T * dA - dM),
         -(dM / eta_SA - (1 - gamma) * kappa_T * dA)
     )
 
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM),
-        -(dM / eta_SA - gamma * kappa_T * dA)
+        eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM_E),
+        -(dM_E / eta_SA - gamma * kappa_T * dA)
     )
     
     dE_mt_max = dE_mt

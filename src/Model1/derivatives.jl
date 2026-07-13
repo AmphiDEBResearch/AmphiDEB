@@ -94,11 +94,7 @@ end
 """
 ODE component for the larval life stage.
 """
-function larva!(du, u, p, t; 
-    y_G = 1., y_GP = 1.,
-    y_M = 1., y_MP = 1.,
-    y_A = 1., y_AP = 1.
-    )::Nothing
+function larva!(du, u, p, t)::Nothing
 
     # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
     u = max.(0, u)
