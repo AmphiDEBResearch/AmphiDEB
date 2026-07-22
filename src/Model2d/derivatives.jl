@@ -59,7 +59,7 @@ function embryo!(
 
     yT = y_T(T_A, T_ref, T_aq)
 
-    dI = S^(2/3) * dI_max_emb * yT
+    dI = (S + E_mt)^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
     dM = S * k_M_emb * y_M * y_MP * yT
     dM_E = E_mt * k_M_Emt * y_M * y_MP * yT
@@ -105,14 +105,19 @@ function larva!(du, u, p, t;
 
     y_G, y_M, y_A, _, _, y_κ_neg, y_κ_pos = aquatic_td_binary_IA_loglogistic(du, u, p, t)
 
+    if p.glb.C_W1 == 3.
+        @show (p.glb.C_W1, u.ind.tktd.D_W1_M, p.ind.tktd.e1_M, y_M)
+    end
+
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
 
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq) * y_κ_neg * y_κ_pos
 
-    S = max(0, S) # this needed for isoutofdomain() to work 
+    S = smax(0, S) # this needed for isoutofdomain() to work 
+    E_mt = smax(0, E_mt)
 
-    dI = fX * dI_max_lrv * S^(2/3) * yT
+    dI = fX * dI_max_lrv * (S + E_mt)^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
     dM = S * k_M_emb * y_M * y_MP * yT
     dM_E = E_mt * k_M_Emt * y_M * y_MP * yT
@@ -174,7 +179,7 @@ function metamorph!(
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
 
     dI_max_t = dI_max_lrv * (E_mt / E_mt_max)
-    dI = dI_max_lrv * dI_max_t * fX * S^(2/3) * yT
+    dI = dI_max_lrv * dI_max_t * fX * (S + E_mt)^(2/3) * yT
     dA = eta_IA * dI
     dM = ((S * k_M_emb) + (E_mt * k_M_Emt)) * y_M * y_MP * yT
     dJ = (H * k_J_emb * y_M * y_MP * yT) # maintenance costs for larval maturity
@@ -362,6 +367,11 @@ function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
     
     prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
     sol = solve(prob, alg; callback = metamorphosis_terminal, saveat = saveat, isoutofdomain = isoutofdomain, kwargs...)
+    
+    if length(sol.t)==0
+        @warn "Solution has length 0, returning `nothing`."
+        return nothing, sol.u, p_ind
+    end
     
     return EcotoxSystems.sol_to_df(sol), sol.u[end], p_ind
 end
