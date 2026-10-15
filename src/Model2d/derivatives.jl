@@ -131,7 +131,7 @@ function larva!(du, u, p, t;
 
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM_E),
+        eta_AS_emb * y_G * y_GP * (gamma * kappa_T * dA - dM_E),
         -(dM_E / eta_SA - gamma * kappa_T * dA)
     )
     

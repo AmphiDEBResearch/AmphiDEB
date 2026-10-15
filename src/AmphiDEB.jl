@@ -26,6 +26,9 @@ module FittingUtils
     include("FittingUtils/traits.jl")
 end
 
+"""
+The reference model.
+"""
 module Model1
 
     using EcotoxSystems, EcotoxModelFitting
@@ -48,6 +51,36 @@ module Model1
     include("Model1/simulation.jl")
 end
 
+"""
+`Model1b` is identical to `Model1`, except that maturity is re-set at climax (`j1`, GS 42).
+"""
+module Model1b 
+    using EcotoxSystems, EcotoxModelFitting
+    using EcotoxSystems.IBM
+    import ..FittingUtils
+
+    using Parameters
+    using Distributions
+    using DataStructures
+    import DataFrames: AbstractDataFrame
+    using ComponentArrays, StaticArrays
+    using OrdinaryDiffEq
+    using StatsBase
+
+    include("Model1b/parameters.jl")
+    include("Model1b/statevars.jl")
+    include("Model1b/rules.jl")
+    include("Model1b/callbacks.jl")
+    include("Model1b/derivatives.jl")
+    include("Model1b/simulation.jl")
+
+end
+
+"""
+`Model2` forces ingestion rates to 0 during climax. 
+Mobilization of the buffer follows a first-order rate constant.
+Froglet emergence occurs when the buffer is used up, up to a rest given by the auxiliary parameter `ϵ_Emt`.
+"""
 module Model2
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -67,6 +100,9 @@ module Model2
 
 end
 
+"""
+`Model2b` is identical to `Model2`, except that maturity is re-set at climax.
+"""
 module Model2b
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -86,6 +122,9 @@ module Model2b
 
 end
 
+"""
+`Model2c` includes maintenance costs associated with `E_mt`.
+"""
 module Model2c
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -104,7 +143,9 @@ module Model2c
     include("Model2c/derivatives.jl")
 end
 
-
+"""
+`Model2d`
+"""
 module Model2d
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -125,6 +166,13 @@ module Model2d
     include("Model2d/traits.jl")
 end
 
+"""
+In `Model3`, froglet emergence is trigerred by a maturity threshold `H_j1`.
+At emergence, froglets convert remaining reserve buffer to structure, so that froglets can continue to function like a standard DEBkiss animal. 
+
+Investment in `E_mt` starts at fertilization, not birth. 
+`E_mt` is associated with specific maintenance costs.
+"""
 module Model3
     using EcotoxSystems, EcotoxModelFitting
     import ..FittingUtils
@@ -146,5 +194,20 @@ module Model3
     include("Model3/traits.jl")
 end
 
+
+"""
+Model 4 further simplifies the model structure by removing the state variable E_mt altogether.
+
+Metamorphs mimick the embryonic phase more strictly through the following assumptions:
+
+- Maturity is re-set at climax
+- At climax, a fraction γW_S of structural weight is converted to buffer
+- The buffer has the same function as the egg buffer for embryos. 
+- Following the default starvation rules, metamorphs may use the buffer to cover maintenance.
+"""
+module Model4
+
+
+end
 
 end # module AmphiDEB

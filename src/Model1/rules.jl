@@ -106,6 +106,7 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     # ---- aging
     # TODO: easiest way to incorporate temp-dependency into aging is via "temperature-age"
     #       if we actually fit the model to aging data, we could extend to use proposed aging rules from the DEBkiss  
+    #       better way might by ageing module suggested in DEBkiss book
 
     if death_by_aging(ind.age, p.ind.aux.a_max)
         ind.aux.cause_of_death = 1.
