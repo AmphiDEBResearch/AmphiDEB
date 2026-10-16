@@ -16,8 +16,9 @@ glb() = ComponentVector(
     T_ter = 293.15, # ambient temperature in terrestric environment [K]
     C_W1 = 0., # aquatic exposure concentrations of substance 1 [e.g. μg/L]
     C_W2 = 0., # aquatic exposure concentrations of substance 2 [e.g. μg/L]
-    pathogen_inoculation_dose = 0., # amount of pathogen spores added to aquatic medium [# spores]
-    pathogen_inoculation_time = 30., # time-point of pathogen inoculation [d]
+    # pathogen submodel was not included in latest update; TBD
+    #pathogen_inoculation_dose = 0., # amount of pathogen spores added to aquatic medium [# spores]
+    #pathogen_inoculation_time = 30., # time-point of pathogen inoculation [d]
 )
 
 """
@@ -68,11 +69,12 @@ spc() = ComponentVector(
     watercontent_larvae = 0.9, 
     watercontent_juveniles = 0.75, 
 
+    # auxiliary parameters
     aux = ComponentVector(
-        tau_R = 365., 
-        h_S = 1e-3, 
-        S_rel_crit = 1/3, 
-        a_max = Truncated(Normal(3650, 365), 0, Inf)
+        tau_R = 365., # reproduction period [d]
+        h_S = 1e-3, #  starvation hazard rate [d^-1]
+        S_rel_crit = 1/3, # critical relative loss of strucrture to trigger starvation mortality [-]
+        a_max = Truncated(Normal(3650, 365), 0, Inf) # expected life span at reference temp. [d]
     ), 
     tktd = tktdparams_binary_loglogistic()
 )
@@ -136,9 +138,17 @@ const tktdparams_binary_linear = tktdparams_binary_loglogistic
 
 defaultparams() = ComponentVector(glb = glb(), spc = spc())
 
+getval(x::Distribution) = rand(x) 
+getval(x::Any) = x
+
+"""
+Convert species-level parameters `spc` to individual-level parameters `ind`.
+Parameters which are subject to individual variability are sampled from their respective distributions.
+Variability in `Z` may propagate to other parameters, such as egg weight.
+"""
 function generate_individual_params(p; kwargs...)
 
-    ind = EcotoxSystems.getval.(p.spc) |> 
+    ind = getval.(p.spc) |> 
     x -> Real.(x) |> 
     x -> begin
         x.dI_max_emb *= x.Z^(1/3)

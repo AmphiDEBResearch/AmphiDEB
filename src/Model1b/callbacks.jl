@@ -1,7 +1,7 @@
 import ..AmphiDEB.Model1: birth, birth_condition, birth_affect!, birth_affect_terminal!
 #import ..AmphiDEB.Model1: metamorphosis, metamorphosis_condition, metamorphosis_affect!, metamorphosis_affect_terminal!
-import ..AmphiDEB.Model1: froglet_emergence, froglet_emergence_condition, froglet_emergence_affect!, froglet_emergence_affect_terminal!
-import ..AmphiDEB.Model1: puberty, puberty_condition, puberty_affect!, puberty_affect_terminal!
+#import ..AmphiDEB.Model1: froglet_emergence, froglet_emergence_condition, froglet_emergence_affect!, froglet_emergence_affect_terminal!
+#import ..AmphiDEB.Model1: puberty, puberty_condition, puberty_affect!, puberty_affect_terminal!
 
 
 function metamorphosis_condition(u, t, integrator)
@@ -86,6 +86,7 @@ puberty = ContinuousCallback(
     nothing,
     save_positions = (true,true)
     )
+    
 puberty_terminal = ContinuousCallback(
     puberty_condition, 
     puberty_affect_terminal!, 
