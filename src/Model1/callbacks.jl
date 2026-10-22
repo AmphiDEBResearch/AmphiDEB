@@ -36,6 +36,8 @@ function metamorphosis_affect!(integrator)
     integrator.u.ind.metamorph = 1.
     integrator.u.ind.juvenile = 0.
     integrator.u.ind.adult = 0.
+
+    #@show integrator.u.ind.H
 end
 
 function metamorphosis_affect_terminal!(integrator)

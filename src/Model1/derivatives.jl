@@ -117,19 +117,19 @@ function larva!(du, u, p, t)::Nothing
     S = max(0, S)
 
     dI = fX * dI_max_lrv * S^(2/3) * yT
-    dA = dI * eta_IA * y_A * y_AP
-    dM = S * k_M_emb * y_M * y_MP * yT
-    dJ = H * k_J_emb * y_M * y_MP * yT
+    dA = dI * eta_IA * y_A #* y_AP
+    dM = S * k_M_emb * y_M * yT # * y_MP 
+    dJ = H * k_J_emb * y_M * yT # * y_MP 
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        y_G * y_GP * eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM),
+        eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM) * y_G,# * y_GP ,
         -(dM / eta_SA - kappa_T * dA)
     )
     
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * y_G * y_GP * gamma * (kappa_T * dA - dM),
+        eta_AS_emb * gamma * (kappa_T * dA - dM) * y_G,# * y_GP ,
         -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
     )
 

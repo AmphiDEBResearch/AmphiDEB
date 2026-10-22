@@ -1,5 +1,3 @@
-import ..Model1: tktdstates_binary
-
 const X_EMB_INT_REL = 1e-3
 
 """"
@@ -9,11 +7,7 @@ Initialize individual-level state variables for the AmhpiDEB model.
 Additional states can be added via kwargs. 
 If existing states are provided via kwargs, these will be overwritten.
 """
-function initialize_individual_statevars(
-    p::ComponentVector; 
-    id = 1., 
-    cohort = 0.
-    )::ComponentVector
+function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)::ComponentVector
 
     return ComponentVector(
         embryo = 1.,
@@ -35,8 +29,7 @@ function initialize_individual_statevars(
         
         S_max = calc_S_max(p.ind.dI_max_emb, p.ind.eta_IA, p.ind.kappa_emb, p.ind.k_M_emb), # currently possible maximum stuructural mass
 
-        E_mt = 1e-10, # metamorphic reserve
-        E_mt_max = 1e-10, # maximum metamorphic reserve
+        E_mt = 0, # metamorphic reserve
         P_S = 0, # pathogen sporangia
 
         tktd = tktdstates_binary(),
@@ -55,10 +48,28 @@ function initialize_individual_statevars(
     )
 end
 
+function tktdstates_binary()
+    return ComponentVector(
+        D_W1_G = 0.,
+        D_W1_M = 0.,
+        D_W1_A = 0.,
+        D_W1_R = 0.,
+        D_W1_H = 0.,
+        D_W1_κ_pos = 0.,
+        D_W1_κ_neg = 0.,
+
+        D_W2_G = 0.,
+        D_W2_M = 0.,
+        D_W2_A = 0.,
+        D_W2_R = 0.,
+        D_W2_H = 0.,
+        D_W2_κ_pos = 0.,
+        D_W2_κ_neg = 0.,
+    )
+end
 
 function initialize_global_statevars(p)
     return ComponentVector(
-        N = 0, 
         X_aq = p.glb.dX_in_aq,
         X_ter = p.glb.dX_in_ter,
         C_W1 = 0., 
@@ -69,9 +80,11 @@ function initialize_global_statevars(p)
         N_mt = 0,
         N_juv = 0,
         N_ad = 0,
-        aging_mortality = 0, # cumulative mortalities (only tracked in population modelling)
+        aging_mortality = 0, # cumulative mortalities
         starvation_mortality = 0,
-        GUTS_mortality = 0,
+        background_mortality = 0,
+        S_mean = 0, # average structural mass
+        S_sd = 0, # sd of of structural mass
     )
 end
 
