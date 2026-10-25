@@ -29,23 +29,32 @@ end
 """
 Simulate larva from birth to metamorphosis.
 """
-function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P())
+function sim_larva(
+    p_ind, u0; 
+    saveat = [], 
+    alg = Rodas5P(), 
+    callback = metamorphosis_terminal, 
+    return_df = true
+    )
 
     tspan = (0,p_ind.glb.t_max)
 
     prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
     sol = solve(
         prob, 
-        callback = metamorphosis_terminal, 
+        callback = callback, 
         saveat = saveat, 
         alg = alg, 
         isoutofdomain = isoutofdomain
         )
     
-    df = EcotoxSystems.sol_to_df(sol)
-    #@show df.t[end] df.H[end]
 
-    return df, sol.u[end], p_ind
+    if return_df
+        df = EcotoxSystems.sol_to_df(sol)
+        return df, sol.u[end], p_ind
+    end
+
+    return sol, sol.u[end], p_ind
 end
 
 """
