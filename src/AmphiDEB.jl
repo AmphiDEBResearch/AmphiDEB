@@ -6,7 +6,7 @@ using EcotoxSystems
 using Parameters
 using Distributions
 using DataStructures
-import DataFrames: AbstractDataFrame
+using DataFrames
 using ComponentArrays, StaticArrays # TODO: static arrays can probably go
 using OrdinaryDiffEq
 using StatsBase
@@ -37,8 +37,8 @@ module Model1
 
     using Parameters
     using Distributions
+    using DataFrames
     using DataStructures
-    import DataFrames: AbstractDataFrame
     using ComponentArrays, StaticArrays
     using OrdinaryDiffEq
     using StatsBase
@@ -52,6 +52,8 @@ module Model1
     include("Model1/traits.jl")
 end
 
+# TODO: add a separate `f` for metamorphs to correct for differences in ingestion rate 
+#       vs. tissue mobilization rate 
 module Model2
 
 using EcotoxSystems, EcotoxModelFitting
@@ -61,7 +63,7 @@ using EcotoxSystems, EcotoxModelFitting
     using Parameters
     using Distributions
     using DataStructures
-    import DataFrames: AbstractDataFrame
+    import DataFrames: AbstractDataFrame, DataFrameRow
     using ComponentArrays, StaticArrays
     using OrdinaryDiffEq
     using StatsBase
