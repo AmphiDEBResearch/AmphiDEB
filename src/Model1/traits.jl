@@ -29,9 +29,13 @@ end
 
 
 function get_Ww(u::ComponentVector{<:Real}, watercontent::Real)
-    
+
     Wd = u.ind.S + u.ind.E_mt
-    Ww = get_ww(Wd, watercontent)
+    Ww = get_Ww(Wd, watercontent)
 
     return Ww
+end
+
+function get_Wd(sim::DataFrameRow)
+    return sim.S + sim.E_mt
 end
