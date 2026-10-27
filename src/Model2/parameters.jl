@@ -51,13 +51,21 @@ spc() = ComponentVector(
     eta_AR = 0.95, # reproduction efficiency [-]; default value is suggested value from DEBkiss book and also the default in add-my-pet
     eta_SA = 0.8, # shrinking efficiency
     k_M_emb = 0.11, # embryonic to metamorph somatic maintenance rate constant; default value from Pfab et al. (2020)
+    k_M_mt_rel = 1., # maintenance cost rate constant during climax, relative to larval period [-] 
     k_M_juv = 0.11, # juvenile and adult somatic maintenance rate constant; initially assumed equal to k_M_emb
-    #delta_k_M_mt = 1., # metamorph somatic maintenance rate constant, relative to that of embryos andd larvae (not used)
     k_J_emb = 0.027, # embryonic to metamorph maturity maintenance rate constant; initially calculated based on (1-kappa)/kappa-ratio
     k_J_juv = 0.027, # juvenile and adult maturity maintenance rate constant; initially assumed equal to k_J_emb
     H_j1 = 1, # maturity at the start of metamorphosis (decline of feeding)
+    #H_j2 = 0.2, # maturity threshold for froglet emergence => is implied for Model 2
     H_p = 55., # maturity at puberty
-    
+
+    # specific metamorph parameters
+
+    delta_E = 1., # energy density of E_mt, relative to S [-]
+    f_mt = 1., # correction factor for buffer moblization rate of metamorphs, compared to ingestion rate of larvae [-]
+
+    # temperature parameters
+
     T_A = 8000., # Arrhenius temperature [K]
     T_ref = 293.15, # reference 
     b_T = 40., # effect strength of temperature on resource allocation

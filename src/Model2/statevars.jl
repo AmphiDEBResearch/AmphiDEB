@@ -29,7 +29,8 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
         
         S_max = calc_S_max(p.ind.dI_max_emb, p.ind.eta_IA, p.ind.kappa_emb, p.ind.k_M_emb), # currently possible maximum stuructural mass
 
-        E_mt = 0, # metamorphic reserve
+        E_mt = 0, # metamorphic reserve buffer
+        E_mt_max = 0, # maximum buffer level
         P_S = 0, # pathogen sporangia
 
         tktd = tktdstates_binary(),

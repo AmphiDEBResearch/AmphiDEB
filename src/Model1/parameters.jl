@@ -57,7 +57,7 @@ spc() = ComponentVector(
     k_J_juv = 0.027, # juvenile and adult maturity maintenance rate constant; initially assumed equal to k_J_emb
     H_j1 = 1, # maturity at the start of metamorphosis (decline of feeding)
     H_p = 55., # maturity at puberty
-    delta_E = 1., # energy density of E_mt, relative to remaining dry mass (not used)
+    delta_E = 1., # energy density of E_mt, relative to remaining dry mass  [-]
 
     T_A = 8000., # Arrhenius temperature (K) 
     T_ref = 293.15, # reference 

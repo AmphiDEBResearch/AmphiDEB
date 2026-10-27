@@ -114,27 +114,25 @@ function larva!(du, u, p, t)::Nothing
 
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq) * y_κ_neg * y_κ_pos
 
-    S = max(0, S)
-
     dI = fX * dI_max_lrv * S^(2/3) * yT
-    dA = dI * eta_IA * y_A #* y_AP
-    dM = S * k_M_emb * y_M * yT # * y_MP 
-    dJ = H * k_J_emb * y_M * yT # * y_MP 
+    dA = dI * eta_IA * y_A * y_AP
+    dM = S * k_M_emb * y_M * yT * y_MP 
+    dJ = H * k_J_emb * y_M * yT * y_MP 
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM) * y_G,# * y_GP ,
+        eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM) * y_G * y_GP ,
         -(dM / eta_SA - kappa_T * dA)
     )
     
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * gamma * (kappa_T * dA - dM) * y_G,# * y_GP ,
+        eta_AS_emb * gamma * (kappa_T * dA - dM) * y_G * y_GP ,
         -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
     )
 
     dE_mt_max = dE_mt
-    dH = max(0, (1 - kappa_T) * dA - dJ)
+    dH = (1 - kappa_T) * dA - dJ
 
     du.glb.X_aq -= (dI * p.glb.food_dynamic)
     du.glb.X_ter = 0.
@@ -148,7 +146,7 @@ function larva!(du, u, p, t)::Nothing
     du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
-
+    
     return nothing
 end
 

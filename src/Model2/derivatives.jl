@@ -65,16 +65,17 @@ function embryo!(
     u = max.(0, u)
 
     @unpack T_aq, food_dynamic = p.glb
-    @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb = p.ind
-    @unpack S, H = u.ind
+    @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb, gamma = p.ind
+    @unpack S, E_mt, H = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
 
     dI = S^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
-    dM = S * k_M_emb * y_M * y_MP * yT
+    dM = (S + E_mt) * k_M_emb * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
-    dS = y_G * y_GP * eta_AS_emb * (kappa_emb * dA - dM)
+    dS = eta_AS_emb * (1 - gamma) * (kappa_emb * dA - dM) 
+    dE_mt = eta_AS_emb * gamma * (kappa_emb * dA - dM) 
     dH =  max(0, (1 - kappa_emb) * dA - dJ)
     
     du.ind.X_emb = -dI
@@ -84,7 +85,7 @@ function embryo!(
     du.ind.S = dS
     du.ind.R = 0.
     du.ind.H = dH
-    du.ind.E_mt = 0.
+    du.ind.E_mt = dE_mt
     du.ind.E_mt_max = 0.
 
     return nothing
@@ -98,6 +99,8 @@ function larva!(du, u, p, t;
     y_G = 1, y_GP = 1,
     y_M = 1, y_MP = 1,
     y_A = 1, y_AP = 1,
+    y_κ_neg = 1., 
+    y_κ_pos = 1
     )::Nothing
 
     # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
@@ -109,6 +112,9 @@ function larva!(du, u, p, t;
     @unpack X_aq = u.glb
     @unpack S, H, E_mt = u.ind
     
+
+    y_G, y_M, y_A, _, _, y_κ_neg, y_κ_pos = aquatic_td_binary_IA_loglogistic(du, u, p, t)
+
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
 
@@ -116,17 +122,23 @@ function larva!(du, u, p, t;
 
     dI = fX * dI_max_lrv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
-    dM = S * k_M_emb * y_M * yT * y_MP 
+    dM = (S + E_mt) * k_M_emb * y_M * yT * y_MP 
     dJ = H * k_J_emb * y_M * yT * y_MP 
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        eta_AS_emb * (kappa_T * dA - dM) * y_G * y_GP ,
+        eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM) * y_G * y_GP ,
         -(dM / eta_SA - kappa_T * dA)
     )
     
-    dE_mt = 0.
-    dH = max(0, (1 - kappa_T) * dA - dJ)
+    dE_mt = Base.ifelse(
+        (kappa_T * dA) > dM, 
+        eta_AS_emb * gamma * (kappa_T * dA - dM) * y_G * y_GP ,
+        -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
+    )
+
+    dE_mt_max = dE_mt
+    dH = (1 - kappa_T) * dA - dJ
 
     du.glb.X_aq -= (dI * p.glb.food_dynamic)
     du.glb.X_ter = 0.
@@ -137,8 +149,10 @@ function larva!(du, u, p, t;
     du.ind.J = dJ
     du.ind.S = dS
     du.ind.E_mt = dE_mt
+    du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
+
 
     return nothing
 end
@@ -157,26 +171,34 @@ function metamorph!(
     u = max.(0, u)
 
     @unpack T_aq, food_dynamic = p.glb
-    @unpack dI_max_emb, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, kappa_emb = p.ind
-    @unpack S, H = u.ind
+    @unpack dI_max_lrv, eta_IA, k_M_emb, T_A, T_ref, k_J_emb, eta_AS_emb, eta_SA, kappa_emb = p.ind
+    @unpack f_mt, delta_E, k_M_mt_rel = p.ind # specific parameters for metamorphs
+    @unpack S, E_mt, H = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
 
-    dI = S^(2/3) * dI_max_emb * yT
+    kappa_T = kappa_emb # we assume that κ-T response is specific to larvae 
+
+    dI = S^(2/3) * f_mt * dI_max_lrv * yT
     dA = eta_IA * y_A * y_AP * dI
-    dM = S * k_M_emb * y_M * y_MP * yT
+    dM = (S + E_mt) * k_M_emb * k_M_mt_rel * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
-    dS = y_G * y_GP * eta_AS_emb * (kappa_emb * dA - dM)
+    
+    dS = Base.ifelse(
+        kappa_T * dA >= dM, 
+        eta_AS_emb * (kappa_T * dA - dM) * y_G * y_GP ,
+        -(dM / eta_SA - kappa_T * dA)
+    )
+
     dH =  max(0, (1 - kappa_emb) * dA - dJ)
     
-    du.ind.E_mt = -dI
+    du.ind.E_mt = -dI/delta_E
     du.ind.I = dI
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
     du.ind.R = 0.
     du.ind.H = dH
-    du.ind.E_mt = 0.
 
     return nothing
 end
@@ -201,7 +223,7 @@ function juvenile!(
     @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
     @unpack S, H = u.ind
 
-    kappa_T = y_T_kap(kappa_juv, b_T, T_ref, T_ter)
+    kappa_T = kappa_juv #y_T_kap(kappa_juv, b_T, T_ref, T_ter)
     yT = y_T(T_A, T_ref, T_ter)
     fX = f_X(X_ter, A_patch_ter, K_X_juv) 
 
@@ -251,7 +273,7 @@ function adult!(du, u, p, t;
     @unpack dI_max_juv, eta_IA, k_M_juv, k_J_juv, eta_AS_juv, eta_SA, eta_AR, kappa_juv, b_T, T_ref, T_A, K_X_juv = p.ind
     @unpack S, H = u.ind
 
-    kappa_T = y_T_kap(kappa_juv, b_T, T_ref, T_ter)
+    kappa_T = kappa_juv #y_T_kap(kappa_juv, b_T, T_ref, T_ter)
     yT = y_T(T_A, T_ref, T_ter)
     fX = f_X(X_ter, A_patch_ter, K_X_juv) 
 
