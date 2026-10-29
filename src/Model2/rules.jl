@@ -29,8 +29,16 @@ end
     return time_since_last_repro >= tau_R 
 end
 
+@inline function check_breeding_season(doy, t0, t1)::Bool
+    return (t0 <= doy <= t1)
+end
+
 @inline function calc_num_offspring(R, X_emb_int)::Int64
     return trunc(R / X_emb_int)
+end
+
+@inline function crowding_hazard(dense, e, b) 
+    return -log(1/(1 + (dense/e)^b))
 end
 
 function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
@@ -40,6 +48,10 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     p = a.p
 
     ind.age += m.aux.dt
+
+    is_aquatic = sum([ind.larva, ind.metamorph])>0
+    is_terrestric = sum([ind.juvenile, ind.adult])>0
+
 
     # ======================================================== #
     # Determining the current life stage
@@ -103,7 +115,7 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     # Mortality
     # ======================================================== #
 
-    # ---- aging
+    # ---- aging ---- #
     # TODO: easiest way to incorporate temp-dependency into aging is via "temperature-age"
     #       if we actually fit the model to aging data, we could extend to use proposed aging rules from the DEBkiss  
     #       better way might by ageing module suggested in DEBkiss book
@@ -113,20 +125,26 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
         glb.aging_mortality += 1
     end
 
+    # ---- starvation (loss of structure) ---- #
 
-    # ---- starvation (loss of structure)
+    # for starvation mortality, currently only a limit is set on the amount of mass that 
+    # can be lost
+    ind.aux.S_max_hist = determine_S_max_hist(
+        ind.S, 
+        ind.aux.S_max_hist
+        )
 
-    # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
-    # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
-    ind.aux.S_max_hist = determine_S_max_hist(ind.S, ind.aux.S_max_hist)
+    if death_by_loss_of_structure(
+        ind.S, 
+        ind.aux.S_max_hist, 
+        p.ind.aux.S_rel_crit, 
+        p.ind.aux.h_S, 
+        m.aux.dt
+        )
 
-    if death_by_loss_of_structure(ind.S, ind.aux.S_max_hist, p.ind.aux.S_rel_crit, p.ind.aux.h_S, m.aux.dt)
         ind.aux.cause_of_death = 2.
         glb.starvation_mortality += 1
     end
-
-    is_aquatic = sum([ind.larva, ind.metamorph])>0
-    is_terrestric = sum([ind.juvenile, ind.adult])>0
 
     h_b = begin
         if is_aquatic
@@ -138,26 +156,45 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
         end
     end
 
-    # ---- background moratality
+    # ---- background moratality ---- #
+
     if stochastic_death(h_b, m.aux.dt)
         ind.aux.cause_of_death = 3.
         glb.background_mortality += 1
     end
 
-    # ======================================================== #
-    # Reproduction
-    # Assuming a very simple rule: 
-    # Constant 
-    # ======================================================== #
+    # ---- crowding ---- +
+    
+    if is_aquatic
+        dense_crowd = (glb.N_lrv + glb.N_mt)/p.glb.V_patch_aq
+        h_crw = crowding_hazard(dense_crowd, p.ind.crowding.e, p.ind.crowding.b)
+        if stochastic_death(h_crw, m.aux.dt)
+            ind.aux.cause_of_death = 4. 
+            glb.crowding_mortality += 1
+        end
+    end
+
+    # ===================================================================== #
+    # Reproduction assuming some very simple rules
+    # ===================================================================== #
 
     # reproduction only occurs if the reproduction period has been exceeded
-    if check_reproduction_period(ind.aux.time_since_last_repro, p.ind.aux.tau_R) 
+    doy = m.aux.t%365
+    
+    ready_for_repro = check_reproduction_period(
+        ind.aux.time_since_last_repro, p.ind.aux.tau_R
+        )
+    in_breeding_season = check_breeding_season(
+        doy, p.ind.aux.breeding_season_start, p.ind.aux.breeding_season_end
+        )
+
+    if ready_for_repro && in_breeding_season
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
 
         N = calc_num_offspring(ind.R, p.ind.X_emb_int)
         if isnan(N)
-            println(ind.R, p.ind.X_emb_int)
+            @show (ind.R, p.ind.X_emb_int)
         end
 
         for _ in 1:N
@@ -183,13 +220,14 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
         ind.aux.time_since_last_repro += m.aux.dt # track reproduction period
     end
     
-    ind.aux.fX = let fX = 1
+    ind.f_X = let fX = 1.
         if is_aquatic
             fX = f_X(glb.X_aq, p.glb.V_patch_aq, p.ind.K_X_lrv)
         end
         if is_terrestric
             fX = f_X(glb.X_ter, p.glb.A_patch_ter, p.ind.K_X_juv)
         end
+
         fX
     end
     

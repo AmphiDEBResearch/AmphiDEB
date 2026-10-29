@@ -81,7 +81,9 @@ spc() = ComponentVector(
         tau_R = 365., # reproduction period [d]
         h_S = 1e-3, #  starvation hazard rate [d^-1]
         S_rel_crit = 1/3, # critical relative loss of strucrture to trigger starvation mortality [-]
-        a_max = Truncated(Normal(3650, 365), 0, Inf) # expected life span at reference temp. [d]
+        a_max = Truncated(Normal(3650, 365), 0, Inf), # expected life span at reference temp. [d]
+        breeding_season_start = 0.,#90., # day of year marking start of breeding season [d]
+        breeding_season_end = 365.,#200., # day of year marking end of breeding season [d]
     ), 
     tktd = tktdparams_binary_loglogistic()
 )

@@ -44,7 +44,6 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
             cause_of_death = 0.,
             time_since_last_repro = 0.,
             cum_repro = 0.,
-            fX = 1.,
         )
     )
 end
@@ -75,17 +74,18 @@ function initialize_global_statevars(p)
         X_ter = p.glb.dX_in_ter,
         C_W1 = 0., 
         C_W2 = 0.,
-        P_Z = 0,
-        N_emb = 0,
-        N_lrv = 0,
-        N_mt = 0,
-        N_juv = 0,
-        N_ad = 0,
-        aging_mortality = 0, # cumulative mortalities
-        starvation_mortality = 0,
-        background_mortality = 0,
-        S_mean = 0, # average structural mass
-        S_sd = 0, # sd of of structural mass
+        P_Z = 0.,
+        N_emb = 0.,
+        N_lrv = 0.,
+        N_mt = 0.,
+        N_juv = 0.,
+        N_ad = 0.,
+        aging_mortality = 0., # cumulative mortalities
+        starvation_mortality = 0.,
+        background_mortality = 0.,
+        crowding_mortality = 0.,
+        S_mean = 0., # average structural mass
+        S_sd = 0., # sd of of structural mass
     )
 end
 
