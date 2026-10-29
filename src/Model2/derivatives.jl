@@ -106,20 +106,17 @@ function larva!(du, u, p, t;
     # usimg max() in combination with isoutofdomain based on https://discourse.julialang.org/t/domainerror-while-solving-ode/53199/4, 
     u = max.(0, u)
 
-    
     @unpack T_aq, V_patch_aq, food_dynamic = p.glb
     @unpack Z, dI_max_lrv, eta_IA, eta_AS_emb, eta_SA, kappa_emb, k_M_emb, k_J_emb, b_T, T_ref, T_A, K_X_lrv, gamma, delta_E = p.ind
     @unpack X_aq = u.glb
     @unpack S, H, E_mt = u.ind
     
-
     y_G, y_M, y_A, _, _, y_κ_neg, y_κ_pos = aquatic_td_binary_IA_loglogistic(du, u, p, t)
 
     yT = y_T(T_A, T_ref, T_aq)
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
 
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq) * y_κ_neg * y_κ_pos
-
     dI = fX * dI_max_lrv * S^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
     dM = (S + E_mt) * k_M_emb * y_M * yT * y_MP 
@@ -152,8 +149,7 @@ function larva!(du, u, p, t;
     du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
-
-
+    
     return nothing
 end
 

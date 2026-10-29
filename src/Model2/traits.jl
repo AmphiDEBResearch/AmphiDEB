@@ -1,13 +1,19 @@
 """
-Calculate maximum structural weight for larvae. 
+Maximum structural weight for larvae. 
 """
 function get_Smax_lrv(spc)
     return ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
 end
 
+"""
+Maximum structural weight for adults. 
+"""
+function get_Smax_ad(spc)
+    return ((spc.kappa_juv * spc.eta_IA * spc.dI_max_juv)/spc.k_M_juv)^3
+end
 
 """
-Calculate absolute maximum assimilation rate (mg/d) for larvae.
+Absolute maximum assimilation rate (mg/d) for larvae.
 """
 function get_dAmax_lrv(spc)
     S_max = get_Smax_lrv(spc)
@@ -15,17 +21,39 @@ function get_dAmax_lrv(spc)
 end
 
 """
-Calculate maximum metamorphic reserve buffer `E_mt_max`.
+Absolute maximum assimilation rate (mg/d) for juveniles.
+"""
+function get_dAmax_ad(spc)
+    S_max = get_Smax_ad(spc)
+    return spc.dI_max_juv * spc.eta_IA * S_max^(2/3)
+end
+
+"""
+Maximum achievable maturity for larvae, based on equilibrium conditions.
 """
 function get_Hmax(spc)
     dAmax = get_dAmax_lrv(spc)
     return ((1 - spc.kappa_emb) * dAmax)/spc.k_J_emb
 end
 
+"""
+Maximum achievable maturity for juveniles, based on equilibrium conditions.
+"""
+function get_Hmax_ad(spc)
+    dAmax = get_dAmax_ad(spc)
+    return ((1 - spc.kappa_juv) * dAmax)/spc.k_J_emb
+end
+
+"""
+Wet weight from dry weight and water content.
+"""
 function get_Ww(Wd::Real, watercontent::Real)
     return Wd/(1 - watercontent)
 end
 
+"""
+Wet weight from state vector and water content.
+"""
 function get_Ww(u::ComponentVector{<:Real}, watercontent::Real)
 
     Wd = u.ind.S + u.ind.E_mt
@@ -34,6 +62,9 @@ function get_Ww(u::ComponentVector{<:Real}, watercontent::Real)
     return Ww
 end
 
+"""
+Dry weight from individual row of simulation output.
+"""
 function get_Wd(sim::DataFrameRow)
     return sim.S + sim.E_mt
 end
@@ -49,15 +80,93 @@ If the default metamorphosis callback has been included in the call to `sim_larv
 this will be the time-point of the callback.
 """
 function get_tj(sim_lrv::AbstractDataFrame)
-
     t_j = maximum(sim_lrv[sim_lrv.larva .== 1,:t])
-
     return t_j
 end
 
 function get_j(sim_lrv::AbstractDataFrame)
+    
+    try
+        t_j = get_tj(sim_lrv)
+        return sim_lrv[sim_lrv.t .== t_j,:][1,:]
+    catch
+        @show unique(sim_lrv.larva) unique(sim_lrv.metamorph)
+    end
+end
 
-    t_j = maximum(sim_lrv[sim_lrv.larva .== 1,:t])
-    return sim_lrv[sim_lrv.t .== t_j,:][1,:]
+function get_Ri(spc::ComponentVector)
 
+    S_max = get_Smax_ad(spc)
+
+    A_max = spc.dI_max_lrv * S_max^(2/3) * spc.eta_IA
+    dJ_max = spc.k_J_juv * spc.H_p
+
+    return spc.eta_AR * ((1 - spc.kappa_juv) * A_max - dJ_max)
+end
+
+function get_Ww_max_ad(spc::ComponentVector)
+
+    Wd_max = get_Smax_ad(spc)
+    Ww_max = get_Ww(Wd_max, spc.watercontent_juveniles)
+
+    return Ww_max
+end
+
+function get_dI_max(Ww_max, kappa, eta_IA, k_M, watercontent)
+
+    S_max = (1 - watercontent) * Ww_max
+
+    # S_max = ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
+    # S_max^1/3 = (spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb
+    # S_max^1/3 * k_M = kappa eta_IA * dI_max
+
+    dI_max = (S_max^(1/3) * k_M) / (kappa * eta_IA)
+
+    return dI_max
+end
+
+
+function get_tp(u_j2::ComponentVector, p_ind::ComponentVector)
+
+    sim_juv,_ = sim_juvenile(p_ind, u_j2)
+
+    return sim_juv.t[end]
+end
+
+"""
+Obtain age at puberty by simulating through all life stages.
+"""
+function get_ap(p::ComponentVector)
+
+    t_max0 = p.glb.t_max
+
+    emb, u_b, p_ind = Model2.sim_embryo(p) 
+    lrv, u_j1, _ = Model2.sim_larva(p_ind, u_b) 
+    met, u_j2, _ = Model2.sim_metamorph(p_ind, u_j1) 
+    juv, u_p, _ = Model2.sim_juvenile(p_ind, u_j2) 
+    p.glb.t_max = 365. * 10
+    juv, u_p, _ = Model2.sim_juvenile(p_ind, u_j2) 
+    p.glb.t_max = t_max0
+
+    return emb.t[end] + lrv.t[end] + met.t[end] + juv.t[end]
+end
+
+"""
+Obtain age and weight at puberty by simulating through all life stages.
+"""
+function get_tp(p::ComponentVector)
+
+    t_max0 = p.glb.t_max
+
+    emb, u_b, p_ind = Model2.sim_embryo(p) 
+    lrv, u_j1, _ = Model2.sim_larva(p_ind, u_b) 
+    met, u_j2, _ = Model2.sim_metamorph(p_ind, u_j1) 
+    p.glb.t_max = 365. * 10
+    juv, u_p, _ = Model2.sim_juvenile(p_ind, u_j2) 
+    p.glb.t_max = t_max0
+    return (
+        a_p = emb.t[end] + lrv.t[end] + met.t[end] + juv.t[end],
+        Wd_p = u_p.ind.S, 
+        Ww_p = get_Ww(u_p.ind.S, p.spc.watercontent_juveniles)
+    )
 end
