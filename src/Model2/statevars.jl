@@ -20,7 +20,8 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
         H = 0., # maturity [mg]
         R = 0., # reproduction buffer [mg]
-        f_X = 1., # scaled functional response [mg]
+        f_X = 1., # scaled functional response [-]
+        f_Xh = 1., # feeding history [-]
         I_emb = 0., # ingestion from vitellus [mg]
         I = 0., # total ingestion [mg]
         A = 0., # assimilation [mg]

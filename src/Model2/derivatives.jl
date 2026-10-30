@@ -93,6 +93,7 @@ function embryo!(
     du.ind.E_mt_max = 0.
     du.ind.S_max_hist = dS_max_hist
     du.ind.L_s = 1/3 * S^(-2/3) * dS
+    du.ind.f_Xh = 0. # feeding history [d^-1]
 
     return nothing
 end
@@ -156,6 +157,7 @@ function larva!(du, u, p, t;
     du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
+    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
     
     return nothing
 end
@@ -203,6 +205,7 @@ function metamorph!(
     du.ind.S_max_hist = smax(0, dS)
     du.ind.R = 0.
     du.ind.H = dH
+    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
 
     return nothing
 end
@@ -255,6 +258,7 @@ function juvenile!(
     du.ind.S_max_hist = smax(0, dS)
     du.ind.H = dH
     du.ind.R = 0.
+    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
 
     return nothing
 end
@@ -302,6 +306,7 @@ function adult!(du, u, p, t;
     du.ind.S_max_hist = smax(0, dS)
     du.ind.H = 0.
     du.ind.R = dR
+    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
 
     return nothing
 end

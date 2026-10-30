@@ -73,6 +73,11 @@ spc() = ComponentVector(
     h_b_aq = 1e-3, # background mortality for aquatic stages [d^-1]
     h_b_ter = 1e-3, # background mortality for terrestric stages [d^-1]
 
+    # starvation parameters, 
+    τ_f = 1., # characteristic time scale for feeding history [-]
+
+    # compositional parameters
+
     watercontent_larvae = 0.93, 
     watercontent_juveniles = 0.75, 
 
