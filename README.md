@@ -152,3 +152,7 @@ funded by the European Food Safety Authortiy (EFSA).
 ### v0.4.0
 
 - Upgrade to Ecotoxsystems 0.3
+
+### v0.4.1
+
+- Add refined model version as Model2

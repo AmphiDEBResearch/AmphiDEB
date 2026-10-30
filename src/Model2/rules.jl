@@ -129,14 +129,14 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
 
     # for starvation mortality, currently only a limit is set on the amount of mass that 
     # can be lost
-    ind.aux.S_max_hist = determine_S_max_hist(
+    ind.S_max_hist = determine_S_max_hist(
         ind.S, 
-        ind.aux.S_max_hist
+        ind.S_max_hist
         )
 
     if death_by_loss_of_structure(
         ind.S, 
-        ind.aux.S_max_hist, 
+        ind.S_max_hist, 
         p.ind.aux.S_rel_crit, 
         p.ind.aux.h_S, 
         m.aux.dt

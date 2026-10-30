@@ -14,7 +14,7 @@ using StatsBase
 include("utils.jl") # various auxiliary functions
 
 """
-The reference model.
+The reference model as published in Hansul et al. (2026).
 """
 module Model1
 
@@ -38,11 +38,18 @@ module Model1
     include("Model1/traits.jl")
 end
 
-# TODO: add a separate `f` for metamorphs to correct for differences in ingestion rate 
-#       vs. tissue mobilization rate 
+"""
+An update model version with the following modifications:
+
+- `E_mt` is associated with maintenance costs (assumed identical to structure)
+- Investment in `E_mt` starts at fertilization, not birth
+- At climax, maturity is re-set to 0
+- During climax, ingestion rates are forced to 0
+- The rules for mobilizing `E_mt` during climax are the same as the rules for the mobilization of the egg buffer by embryos
+"""
 module Model2
 
-using EcotoxSystems, EcotoxModelFitting
+    using EcotoxSystems, EcotoxModelFitting
     using EcotoxSystems.IBM
 
     using Parameters

@@ -1,3 +1,5 @@
+smax(x, y; λ = 1e3) = (x + y + sqrt((x - y)^2) + λ) / 2 
+
 """
 ODE component for food dynamics with simple first-order kinetics.
 Disengaged for `p.glb.food_dynamic = 0.`
@@ -76,7 +78,9 @@ function embryo!(
     dJ = H * k_J_emb * y_M * y_MP * yT
     dS = eta_AS_emb * (1 - gamma) * (kappa_emb * dA - dM) 
     dE_mt = eta_AS_emb * gamma * (kappa_emb * dA - dM) 
-    dH =  max(0, (1 - kappa_emb) * dA - dJ)
+    dH =  smax(0, (1 - kappa_emb) * dA - dJ)
+
+    dS_max_hist = smax(0, dS)
     
     du.ind.X_emb = -dI
     du.ind.I = dI
@@ -87,6 +91,8 @@ function embryo!(
     du.ind.H = dH
     du.ind.E_mt = dE_mt
     du.ind.E_mt_max = 0.
+    du.ind.S_max_hist = dS_max_hist
+    du.ind.L_s = 1/3 * S^(-2/3) * dS
 
     return nothing
 end
@@ -145,6 +151,7 @@ function larva!(du, u, p, t;
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
+    du.ind.S_max_hist = smax(0, dS)
     du.ind.E_mt = dE_mt
     du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
@@ -186,13 +193,14 @@ function metamorph!(
         -(dM / eta_SA - kappa_T * dA)
     )
 
-    dH =  max(0, (1 - kappa_emb) * dA - dJ)
+    dH =  smax(0, (1 - kappa_emb) * dA - dJ)
     
     du.ind.E_mt = -dI/delta_E
     du.ind.I = dI
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
+    du.ind.S_max_hist = smax(0, dS)
     du.ind.R = 0.
     du.ind.H = dH
 
@@ -232,7 +240,7 @@ function juvenile!(
         y_G * y_GP * eta_AS_juv * (kappa_T * dA - dM),
         -(dM / eta_SA - kappa_T * dA), 
     )    
-    dH =  max(0, (1 - kappa_T) * dA - dJ)
+    dH =  smax(0, (1 - kappa_T) * dA - dJ)
 
     du.glb.X_aq = 0.
     du.glb.X_ter -= (food_dynamic * dI)
@@ -244,6 +252,7 @@ function juvenile!(
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
+    du.ind.S_max_hist = smax(0, dS)
     du.ind.H = dH
     du.ind.R = 0.
 
@@ -290,6 +299,7 @@ function adult!(du, u, p, t;
     du.ind.M = dM
     du.ind.J = dJ
     du.ind.S = dS
+    du.ind.S_max_hist = smax(0, dS)
     du.ind.H = 0.
     du.ind.R = dR
 
