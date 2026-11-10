@@ -1,4 +1,11 @@
-smax(x, y; λ = 1e3) = (x + y + sqrt((x - y)^2) + λ) / 2 
+# ======================================================================================== #
+# derivatives.jl
+# derivatives for AmphiDEB Model 2
+# ======================================================================================== #
+
+# smooth maximum function would be preferrable 
+#   - replaced with regular max() for now due to some artefacts caused by smax...
+smax(x, y; λ = 1e3) = max(x, y) #(x + y + sqrt((x - y)^2) + λ) / 2 
 
 """
 ODE component for food dynamics with simple first-order kinetics.
@@ -71,13 +78,14 @@ function embryo!(
     @unpack S, E_mt, H = u.ind
 
     yT = y_T(T_A, T_ref, T_aq)
+    W = S + E_mt
 
-    dI = S^(2/3) * dI_max_emb * yT
+    dI = W^(2/3) * dI_max_emb * yT
     dA = eta_IA * y_A * y_AP * dI
-    dM = (S + E_mt) * k_M_emb * y_M * y_MP * yT
+    dM = W * k_M_emb * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
-    dS = eta_AS_emb * (1 - gamma) * (kappa_emb * dA - dM) 
-    dE_mt = eta_AS_emb * gamma * (kappa_emb * dA - dM) 
+    dS = eta_AS_emb * ((1 - gamma) * kappa_emb * dA - dM) 
+    dE_mt = eta_AS_emb * (gamma * kappa_emb * dA - dM) 
     dH =  smax(0, (1 - kappa_emb) * dA - dJ)
 
     dS_max_hist = smax(0, dS)
@@ -124,20 +132,22 @@ function larva!(du, u, p, t;
     fX = f_X(X_aq, V_patch_aq, K_X_lrv)
 
     kappa_T = y_T_kap(kappa_emb, b_T, T_ref, T_aq) * y_κ_neg * y_κ_pos
-    dI = fX * dI_max_lrv * S^(2/3) * yT
+    W = S + E_mt
+
+    dI = fX * dI_max_lrv * W^(2/3) * yT
     dA = dI * eta_IA * y_A * y_AP
-    dM = (S + E_mt) * k_M_emb * y_M * yT * y_MP 
+    dM = W * k_M_emb * y_M * yT * y_MP 
     dJ = H * k_J_emb * y_M * yT * y_MP 
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        eta_AS_emb * (1 - gamma) * (kappa_T * dA - dM) * y_G * y_GP ,
-        -(dM / eta_SA - kappa_T * dA)
+        eta_AS_emb * ((1 - gamma) * kappa_T * dA - dM) * y_G * y_GP ,
+        -(dM / eta_SA - gamma * kappa_T * dA)
     )
     
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * gamma * (kappa_T * dA - dM) * y_G * y_GP ,
+        eta_AS_emb * (gamma * kappa_T * dA - dM) * y_G * y_GP ,
         -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
     )
 
@@ -184,9 +194,11 @@ function metamorph!(
 
     kappa_T = kappa_emb # we assume that κ-T response is specific to larvae 
 
-    dI = S^(2/3) * f_mt * dI_max_lrv * yT
+    W = S + E_mt
+
+    dI = W^(2/3) * f_mt * dI_max_lrv * yT
     dA = eta_IA * y_A * y_AP * dI
-    dM = (S + E_mt) * k_M_emb * k_M_mt_rel * y_M * y_MP * yT
+    dM = W * k_M_emb * k_M_mt_rel * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
     
     dS = Base.ifelse(
@@ -205,7 +217,7 @@ function metamorph!(
     du.ind.S_max_hist = smax(0, dS)
     du.ind.R = 0.
     du.ind.H = dH
-    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
+    du.ind.f_Xh = (f_mt - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
 
     return nothing
 end
