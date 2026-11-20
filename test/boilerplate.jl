@@ -2,17 +2,21 @@ using Pkg; Pkg.activate("test")
 isinteractive() && Pkg.develop(path="../EcotoxSystems.jl")
 Pkg.develop(path=".")
 
-using Test
-using Plots, StatsPlots, Plots.Measures
+using Chain
+using DataFrames 
+using DataFramesMeta
 using Distributions
 using OrdinaryDiffEq
-default(leg = false, lw = 1.5)
-
-using Chain
-using DataFrames, DataFramesMeta
+using Plots
+using Plots.Measures
 using StatsBase
+using StatsPlots
+using Test
 
 using Revise
-using AmphiDEB, AmphiDEB.EcotoxSystems
+using AmphiDEB
 
+default(leg = false, lw = 1.5)
 norm(x) = x ./ sum(x)
+
+include("testutils.jl")

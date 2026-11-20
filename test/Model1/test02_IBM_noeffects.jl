@@ -1,5 +1,6 @@
 occursin("AmphiDEB.jl", pwd()) || cd("./lib/AmphiDEB.jl")
-include("boilerplate.jl")
+include("../boilerplate.jl")
+
 using AmphiDEB.Model1
 using AmphiDEB.EcotoxSystems.IBM
 

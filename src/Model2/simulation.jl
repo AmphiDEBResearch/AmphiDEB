@@ -17,7 +17,13 @@ function sim_embryo(p; saveat = [], alg = Rodas5P(), return_sol = false)
     tspan = (0,p.glb.t_max)
 
     prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    sol = solve(
+        prob, 
+        callback = birth_terminal, 
+        saveat = saveat, 
+        alg = alg, 
+        isoutofdomain = isoutofdomain
+        )
 
     if return_sol
         return sol, sol.u[end], p_ind

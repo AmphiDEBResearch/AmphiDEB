@@ -5,7 +5,7 @@ using OrdinaryDiffEq
 using Plots, StatsPlots, Plots.Measures
 default(leg = false, lw = 1.5)
 
-include("testutils.jl")
+include("../testutils.jl")
 
 
 # ======================================== #
@@ -13,15 +13,9 @@ include("testutils.jl")
 # ======================================== #
 
 using AmphiDEB, AmphiDEB.Model1
-using EcotoxSystems
-using StatsPlots
-using DataFrames, DataFramesMeta
-using StatsBase
-
 using Revise
 
 @time import AmphiDEB: defaultparams, ODE_simulator
-using AmphiDEB
 using EcotoxSystems
 
 #using BenchmarkTools

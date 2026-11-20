@@ -142,13 +142,13 @@ function larva!(du, u, p, t;
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
         eta_AS_emb * ((1 - gamma) * kappa_T * dA - dM) * y_G * y_GP ,
-        -(dM / eta_SA - gamma * kappa_T * dA)
+        -dM / eta_SA - ((1 - gamma) * kappa_T * dA)
     )
     
     dE_mt = Base.ifelse(
         (kappa_T * dA) > dM, 
-        eta_AS_emb * (gamma * kappa_T * dA - dM) * y_G * y_GP ,
-        -(dM / eta_SA - (1 - gamma) * kappa_T * dA)/delta_E
+        eta_AS_emb * (gamma * kappa_T * dA - dM) * y_G * y_GP,
+        -(dM / eta_SA - gamma * kappa_T * dA) / delta_E
     )
 
     dE_mt_max = dE_mt
@@ -167,7 +167,7 @@ function larva!(du, u, p, t;
     du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
-    du.ind.f_Xh = (fX - u.ind.f_Xh)/p.ind.τ_f # feeding history [d^-1]
+    du.ind.f_Xh = (fX - u.ind.f_Xh) / p.ind.τ_f # feeding history [d^-1]
     
     return nothing
 end

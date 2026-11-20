@@ -1,6 +1,3 @@
-
-using Plots, DataFrames
-
 function plot_statevars(sim::AbstractDataFrame, vars::Vector{Symbol}; linecolor = :black, kwargs...)
 
     ncols = 4
