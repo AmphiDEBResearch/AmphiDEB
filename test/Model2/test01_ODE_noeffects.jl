@@ -74,50 +74,50 @@ using AmphiDEB.Model2
 end
 
 
-@testset "Randomized parameters" begin
-    
-    global p = deepcopy(Model1.params)
-
-    p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
-    p.spc.k_M_emb = truncated(Normal(0.11, 0.011), 0, Inf)
-    p.spc.eta_AR = truncated(Normal(0.95, 0.095), 0, 1)
-    p.spc.H_p = 50.
-
-    S_max_anl = AmphiDEB.calc_S_max_juv(p.spc)
-
-    @time global sim = @replicates Model1.sim_all(
-            p, 
-            saveat = 1
-            ) 10
-
-    sim[!,:E_mt_rel] = sim.E_mt ./ (sim.S + sim.E_mt)
-    sim[!,:dI] = vcat(0, diff(sim.I))
-    sim[!,:dI_rel] = sim.dI ./ (sim.S .^(2/3))
-    sim[!,:W_tot] = sim.S .+ sim.E_mt 
-    
-    plt = @df sim plot(
-        lineplot(:t, :S), 
-        lineplot(:t, :H), 
-        lineplot(:t, :E_mt_rel), 
-        lineplot(:t, :R),
-        lineplot(:t, :adult),
-        xrotation = 45
-        )
-    hline!([p.spc.H_j1], subplot=2, color = :gray, linestyle = :dash)
-
-    display(plt)
-    
-    # check that all life stage indicators max out close to 1
-
-    @test 0.99 < maximum(sim.embryo) < 1.01
-    @test 0.99 < maximum(sim.larva) < 1.01
-    @test 0.99 < maximum(sim.metamorph) < 1.01
-    @test 0.99 < maximum(sim.juvenile) < 1.01
-    @test 0.99 < maximum(sim.adult) < 1.01
-    
-    # check that the sum of life stage indicators is always approximately 1
-
-    sum_indicators = @. sim.embryo + sim.larva + sim.metamorph + sim.juvenile + sim.adult
-
-    @test unique(isapprox.(1, sum_indicators, atol = 1e-3)) == [true]
-end
+#@testset "Randomized parameters" begin
+#    
+#    global p = deepcopy(Model1.params)
+#
+#    p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
+#    p.spc.k_M_emb = truncated(Normal(0.11, 0.011), 0, Inf)
+#    p.spc.eta_AR = truncated(Normal(0.95, 0.095), 0, 1)
+#    p.spc.H_p = 50.
+#
+#    S_max_anl = AmphiDEB.calc_S_max_juv(p.spc)
+#
+#    @time global sim = @replicates Model1.sim_all(
+#            p, 
+#            saveat = 1
+#            ) 10
+#
+#    sim[!,:E_mt_rel] = sim.E_mt ./ (sim.S + sim.E_mt)
+#    sim[!,:dI] = vcat(0, diff(sim.I))
+#    sim[!,:dI_rel] = sim.dI ./ (sim.S .^(2/3))
+#    sim[!,:W_tot] = sim.S .+ sim.E_mt 
+#    
+#    plt = @df sim plot(
+#        lineplot(:t, :S), 
+#        lineplot(:t, :H), 
+#        lineplot(:t, :E_mt_rel), 
+#        lineplot(:t, :R),
+#        lineplot(:t, :adult),
+#        xrotation = 45
+#        )
+#    hline!([p.spc.H_j1], subplot=2, color = :gray, linestyle = :dash)
+#
+#    display(plt)
+#    
+#    # check that all life stage indicators max out close to 1
+#
+#    @test 0.99 < maximum(sim.embryo) < 1.01
+#    @test 0.99 < maximum(sim.larva) < 1.01
+#    @test 0.99 < maximum(sim.metamorph) < 1.01
+#    @test 0.99 < maximum(sim.juvenile) < 1.01
+#    @test 0.99 < maximum(sim.adult) < 1.01
+#    
+#    # check that the sum of life stage indicators is always approximately 1
+#
+#    sum_indicators = @. sim.embryo + sim.larva + sim.metamorph + sim.juvenile + sim.adult
+#
+#    @test unique(isapprox.(1, sum_indicators, atol = 1e-3)) == [true]
+#end

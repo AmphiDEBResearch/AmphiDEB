@@ -11,5 +11,6 @@ include("boilerplate.jl")
 #include("Model1/test08_starvation_rules.jl")
 
 include("Model2/test01_ODE_noeffects.jl")
+# TODO: remaining tests for Model 2 need to be updated...
 
 include("Aqua.jl")
