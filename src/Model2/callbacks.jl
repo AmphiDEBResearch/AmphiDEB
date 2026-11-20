@@ -38,7 +38,8 @@ function metamorphosis_affect!(integrator)
     integrator.u.ind.juvenile = 0.
     integrator.u.ind.adult = 0.
 
-    integrator.u.ind.E_mt_max = integrator.u.ind.E_mt
+    integrator.u.ind.E_mt = integrator.p.ind.gamma * integrator.u.ind.S
+    integrator.u.ind.S = (1 - integrator.p.ind.gamma) * integrator.u.ind.S
     
     # maturity is reset
     integrator.u.ind.H = 0.
@@ -74,8 +75,14 @@ function froglet_emergence_affect!(integrator)
     integrator.u.ind.juvenile = 1.
     integrator.u.ind.adult = 0.
 
-    # any amount of buffer that is left at this point is assumed to be re-converted to structure
+    # any amount of buffer that may be at this point for whatever reason 
+    # is assumed to be re-converted to structure 
     integrator.u.ind.S += integrator.u.ind.E_mt
+
+    # reset E_mt 
+    integrator.u.ind.E_mt = 0.
+    
+    return nothing
 end
 
 function froglet_emergence_affect_terminal!(integrator)

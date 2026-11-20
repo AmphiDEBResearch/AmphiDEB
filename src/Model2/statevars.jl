@@ -33,8 +33,8 @@ function initialize_individual_statevars(p::ComponentVector; id = 1, cohort = 0)
         L_s = (p.ind.X_emb_int * X_EMB_INT_REL)^(1/3), # skeletal length; a length measure that tracks `S_max_hist` to reflect length measures that cannot decrease [mg^(1/3)]
 
         E_mt = 0, # metamorphic reserve buffer
-        E_mt_max = 0, # maximum buffer level
-        P_S = 0, # pathogen sporangia
+        #E_mt_max = 0, # maximum buffer level
+        #P_S = 0, # pathogen sporangia
 
         tktd = tktdstates_binary(),
 

@@ -84,8 +84,7 @@ function embryo!(
     dA = eta_IA * y_A * y_AP * dI
     dM = W * k_M_emb * y_M * y_MP * yT
     dJ = H * k_J_emb * y_M * y_MP * yT
-    dS = eta_AS_emb * ((1 - gamma) * kappa_emb * dA - dM) 
-    dE_mt = eta_AS_emb * (gamma * kappa_emb * dA - dM) 
+    dS = eta_AS_emb * (kappa_emb * dA - dM) 
     dH =  smax(0, (1 - kappa_emb) * dA - dJ)
 
     dS_max_hist = smax(0, dS)
@@ -97,8 +96,6 @@ function embryo!(
     du.ind.S = dS
     du.ind.R = 0.
     du.ind.H = dH
-    du.ind.E_mt = dE_mt
-    du.ind.E_mt_max = 0.
     du.ind.S_max_hist = dS_max_hist
     du.ind.L_s = 1/3 * S^(-2/3) * dS
     du.ind.f_Xh = 0. # feeding history [d^-1]
@@ -141,17 +138,10 @@ function larva!(du, u, p, t;
 
     dS = Base.ifelse(
         kappa_T * dA >= dM, 
-        eta_AS_emb * ((1 - gamma) * kappa_T * dA - dM) * y_G * y_GP ,
-        -dM / eta_SA - ((1 - gamma) * kappa_T * dA)
+        eta_AS_emb * (kappa_T * dA - dM) * y_G * y_GP ,
+        -dM / eta_SA - (kappa_T * dA)
     )
     
-    dE_mt = Base.ifelse(
-        (kappa_T * dA) > dM, 
-        eta_AS_emb * (gamma * kappa_T * dA - dM) * y_G * y_GP,
-        -(dM / eta_SA - gamma * kappa_T * dA) / delta_E
-    )
-
-    dE_mt_max = dE_mt
     dH = (1 - kappa_T) * dA - dJ
 
     du.glb.X_aq -= (dI * p.glb.food_dynamic)
@@ -163,8 +153,6 @@ function larva!(du, u, p, t;
     du.ind.J = dJ
     du.ind.S = dS
     du.ind.S_max_hist = smax(0, dS)
-    du.ind.E_mt = dE_mt
-    du.ind.E_mt_max = dE_mt_max
     du.ind.R = 0.
     du.ind.H = dH
     du.ind.f_Xh = (fX - u.ind.f_Xh) / p.ind.τ_f # feeding history [d^-1]
@@ -207,7 +195,7 @@ function metamorph!(
         -(dM / eta_SA - kappa_T * dA)
     )
 
-    dH =  smax(0, (1 - kappa_emb) * dA - dJ)
+    dH = smax(0, (1 - kappa_emb) * dA - dJ)
     
     du.ind.E_mt = -dI/delta_E
     du.ind.I = dI
@@ -260,8 +248,6 @@ function juvenile!(
     du.glb.X_aq = 0.
     du.glb.X_ter -= (food_dynamic * dI)
     du.ind.X_emb = 0.
-    du.ind.E_mt = 0.
-    du.ind.E_mt_max = 0.
     du.ind.I = dI 
     du.ind.A = dA
     du.ind.M = dM
@@ -308,8 +294,6 @@ function adult!(du, u, p, t;
     
     du.glb.X_ter -= (dI * food_dynamic)
     du.ind.X_emb = 0.
-    du.ind.E_mt = 0.
-    du.ind.E_mt_max = 0.
     du.ind.I = dI 
     du.ind.A = dA
     du.ind.M = dM

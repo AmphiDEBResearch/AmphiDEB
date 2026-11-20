@@ -37,7 +37,7 @@ Simulate larva from birth to metamorphosis.
 """
 function sim_larva(p_ind, u0; saveat = [], alg = Rodas5P(), callback = metamorphosis_terminal)
 
-    tspan = (0,p_ind.glb.t_max)
+    tspan = (0, p_ind.glb.t_max)
     
     prob = ODEProblem(sys_larva!, u0, tspan, p_ind)
     sol = solve(prob, callback = callback, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)

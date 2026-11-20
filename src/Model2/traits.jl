@@ -2,7 +2,6 @@
 Maximum structural weight for larvae. 
 """
 function get_Smax_lrv(spc)
-    error("needs to be updated to accomodate updated derivatives")
     return ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
 end
 
@@ -17,7 +16,6 @@ end
 Absolute maximum assimilation rate (mg/d) for larvae.
 """
 function get_dAmax_lrv(spc)
-    error("needs to be updated to accomodate updated derivatives")
     S_max = get_Smax_lrv(spc)
     return spc.dI_max_lrv * spc.eta_IA * S_max^(2/3)
 end
@@ -33,7 +31,7 @@ end
 """
 Maximum achievable maturity for larvae, based on equilibrium conditions.
 """
-function get_Hmax(spc)
+function get_Hmax_lrv(spc)
     dAmax = get_dAmax_lrv(spc)
     return ((1 - spc.kappa_emb) * dAmax)/spc.k_J_emb
 end

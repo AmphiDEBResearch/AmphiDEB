@@ -1,6 +1,5 @@
 using Pkg; Pkg.activate("test")
-isinteractive() && Pkg.develop(path="../EcotoxSystems.jl")
-Pkg.develop(path=".")
+#Pkg.develop(path=".")
 
 using Chain
 using DataFrames 

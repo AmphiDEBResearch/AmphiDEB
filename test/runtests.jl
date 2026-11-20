@@ -1,3 +1,4 @@
+cd("./lib/AmphiDEB.jl")
 include("boilerplate.jl")
 
 # TODO: Tests for Model 1 probably need to be updated...
