@@ -41,11 +41,15 @@ end
 """
 An update model version with the following modifications:
 
-- `E_mt` is associated with maintenance costs (assumed identical to structure)
-- Investment in `E_mt` starts at fertilization, not birth
+- `E_mt` is not implicitly represented before climax and thus simply part of structure
+- The model behaviour before climax is therefore identical to the generic DEBkiss model
+- This implies that investment in `E_mt` starts at fertilization, not birth and that `E_mt` implies maintenance
+- At climax, a fraction `gamma` of structure is converted to `E_mt`
 - At climax, maturity is re-set to 0
-- During climax, ingestion rates are forced to 0
-- The rules for mobilizing `E_mt` during climax are the same as the rules for the mobilization of the egg buffer by embryos
+- During climax
+    - Ingestion rates are forced to 0
+    - `E_mt` contributes to maintenance and assimilation scaling, since it was derived from structure 
+    - Otherwise, the rules for mobilizing `E_mt` during climax are the same as the rules for the mobilization of the egg buffer by embryos
 """
 module Model2
 
