@@ -2,6 +2,7 @@
 Maximum structural weight for larvae. 
 """
 function get_Smax_lrv(spc)
+    error("needs to be updated to accomodate updated derivatives")
     return ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
 end
 
@@ -16,6 +17,7 @@ end
 Absolute maximum assimilation rate (mg/d) for larvae.
 """
 function get_dAmax_lrv(spc)
+    error("needs to be updated to accomodate updated derivatives")
     S_max = get_Smax_lrv(spc)
     return spc.dI_max_lrv * spc.eta_IA * S_max^(2/3)
 end
@@ -112,7 +114,39 @@ function get_Ww_max_ad(spc::ComponentVector)
     return Ww_max
 end
 
-function get_dI_max(Ww_max, kappa, eta_IA, k_M, watercontent)
+
+function get_dI_max_lrv(Ww_max, kappa, eta_IA, k_M, watercontent)
+
+    S_max = (1 - watercontent) * Ww_max
+
+    # S_max = ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
+    # S_max^1/3 = (spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb
+    # S_max^1/3 * k_M = kappa eta_IA * dI_max
+
+    dI_max = (S_max^(1/3) * k_M) / (kappa * eta_IA)
+
+    return dI_max
+end
+
+function get_dI_max_lrv(Ww_max, spc)
+
+    kappa = spc.kappa_juv 
+    eta_IA = spc.eta_IA
+    k_M = spc.k_M_juv 
+    watercontent = spc.watercontent_juveniles
+
+    Wd_max = (1 - watercontent) * Ww_max
+    dI_max = (Wd_max^(1/3) * k_M) / (kappa * eta_IA)
+
+    return dI_max
+end
+
+function get_dI_max_juv(Ww_max, spc)
+
+    kappa = spc.kappa_juv 
+    eta_IA = spc.eta_IA
+    k_M = spc.k_M_juv 
+    watercontent = spc.watercontent_juveniles
 
     S_max = (1 - watercontent) * Ww_max
 
