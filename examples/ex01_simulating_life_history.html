@@ -7554,7 +7554,7 @@ To get started more easily, <code>AmphiDEB</code> provides a default parameter s
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>ComponentVector{Any}(glb = (t_max = 56.0, N0 = 1.0, dX_in = Any[20.0, 20.0], k_V = Any[0.0, 0.0], V_patch = Any[1.0, 1.0], T = 293.15, C_W = Any[0.0], pathogen_inoculation_dose = 0.0, pathogen_inoculation_time = 30.0, medium_renewals = Any[0.0]), pth = (gamma = 0.0010000000000000002, eta = 8.0, v0 = 0.5, f = 0.5, sigma0 = 0.16666666666666666, sigma1 = 0.16666666666666666, mu = 0.01986754966887417), spc = (Z = Distributions.Dirac{Float64}(value=1.0), propagate_zoom = (dI_max_emb = 0.3333333333333333, dI_max_lrv = 0.3333333333333333, dI_max_juv = 0.3333333333333333, X_emb_int = 1.0, H_j1 = 1.0, H_p = 1.0, K_X_lrv = 0.3333333333333333, K_X_juv = 0.3333333333333333), X_emb_int = 1, K_X_lrv = 1.0, K_X_juv = 1.0, dI_max_emb = 1, dI_max_lrv = 1, dI_max_juv = 1, kappa_emb = 0.8, kappa_juv = 0.8, gamma = 0.5, eta_IA = 0.54, eta_AS_emb = 0.4, eta_AS_juv = 0.4, eta_AR = 0.95, eta_SA = 0.8, k_M_emb = 0.11, k_M_juv = 0.11, k_J_emb = 0.027, k_J_juv = 0.027, H_j1 = 1, H_p = 55.0, T_A = 8000.0, T_ref = 293.15, b_T = 40.0, drcmodel_sublethal = 1, h_b = 0.0, KD = Any[0.0 0.0 … 0.0 0.0], B = Any[2.0 2.0 … 2.0 2.0], E = Any[1.0e10 1.0e10 … 1.0e10 1.0e10], KD_h = Any[0.0], E_h = Any[1.0e10], B_h = Any[1.0], C_h = Any[1.0], S_rel_crit = 0.66, h_S = 0.6, a_max = Truncated(Distributions.Normal{Float64}(μ=5475.0, σ=547.5); lower=0.0, upper=Inf), tau_R = 365.0, Chi = Distributions.LogNormal{Float64}(μ=1.0, σ=1.0), E_P = Any[Inf, Inf, Inf, Inf], B_P = Any[2.0, 2.0, 2.0, 2.0]))</pre>
+<pre>ComponentVector{Any}(glb = (t_max = 56.0, N0 = 1.0, dX_in = Any[20.0, 20.0], k_V = Any[0.0, 0.0], V_patch = Any[1.0, 1.0], T = 293.15, C_W = Any[0.0], pathogen_inoculation_dose = 0.0, pathogen_inoculation_time = 30.0, medium_renewals = Any[0.0]), pth = (gamma = 0.0010000000000000002, eta = 8.0, v0 = 0.5, f = 0.5, sigma0 = 0.16666666666666666, sigma1 = 0.16666666666666666, mu = 0.01986754966887417), spc = (Z = Distributions.Dirac{Float64}(value=1.0), propagate_zoom = (dI_max_emb = 0.3333333333333333, dI_max_lrv = 0.3333333333333333, dI_max_juv = 0.3333333333333333, X_emb_int = 1.0, H_j1 = 1.0, H_p = 1.0, K_X_lrv = 0.3333333333333333, K_X_juv = 0.3333333333333333), X_emb_int = 1, K_X_lrv = 1.0, K_X_juv = 1.0, dI_max_emb = 1, dI_max_lrv = 1, dI_max_juv = 1, kappa_emb = 0.8, kappa_juv = 0.8, gamma = 0.5, eta_IA = 0.54, eta_AS_emb = 0.4, eta_AS_juv = 0.4, eta_AR = 0.95, eta_SA = 0.8, k_M_emb = 0.11, k_M_juv = 0.11, k_J_emb = 0.027, k_J_juv = 0.027, H_j1 = 1, H_p = 55.0, T_A = 8000.0, T_ref = 293.15, b_T = 40.0, drcmodel_sublethal = 1, h_b = 0.0, KD = Any[0.0 0.0 … 0.0 0.0], B = Any[2.0 2.0 … 2.0 2.0], E = Any[1.0e10 1.0e10 … 1.0e10 1.0e10], KD_h = Any[0.0], E_h = Any[1.0e10], B_h = Any[1.0], C_h = Any[1.0], S_rel_crit = 0.66, h_S = 0.6, a_max = truncated(Distributions.Normal{Float64}(μ=5475.0, σ=547.5); lower=0.0, upper=Inf), tau_R = 365.0, Chi = Distributions.LogNormal{Float64}(μ=1.0, σ=1.0), E_P = Any[Inf, Inf, Inf, Inf], B_P = Any[2.0, 2.0, 2.0, 2.0]))</pre>
 </div>
 </div>
 </div>
@@ -8834,7 +8834,7 @@ Any element of the parameter vector <code>p</code> can also be provided as a dis
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-julia"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Distributions</span>
-<span class="n">p</span><span class="o">.</span><span class="n">spc</span><span class="o">.</span><span class="n">Z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Truncated</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">Inf</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">spc</span><span class="o">.</span><span class="n">Z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">truncated</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">Inf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8847,7 +8847,7 @@ Any element of the parameter vector <code>p</code> can also be provided as a dis
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Truncated(Normal{Float64}(μ=1.0, σ=0.2); lower=0.0, upper=Inf)</pre>
+<pre>truncated(Normal{Float64}(μ=1.0, σ=0.2); lower=0.0, upper=Inf)</pre>
 </div>
 </div>
 </div>

@@ -74,7 +74,7 @@ spc() = ComponentVector(
         tau_R = 365., # reproduction period [d]
         h_S = 1e-3, #  starvation hazard rate [d^-1]
         S_rel_crit = 1/3, # critical relative loss of strucrture to trigger starvation mortality [-]
-        a_max = Truncated(Normal(3650, 365), 0, Inf) # expected life span at reference temp. [d]
+        a_max = truncated(Normal(3650, 365), 0, Inf) # expected life span at reference temp. [d]
     ), 
     tktd = tktdparams_binary_loglogistic()
 )

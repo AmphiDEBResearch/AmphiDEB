@@ -100,11 +100,11 @@ function _df_to_tex(df::AbstractDataFrame, fname::AbstractString; colnames::Unio
 end
 
 """
-    fdist(dist::Truncated{Normal{Float64}})
+    fdist(dist::truncated{Normal{Float64}})
 
 Format truncated Normal distribution as String.
 """
-function fdist(dist::Truncated{Normal{Float64}})
+function fdist(dist::truncated{Normal{Float64}})
     return "TN($(fround(dist.untruncated.μ)), $(fround(dist.untruncated.σ)), $(dist.lower), $(dist.upper))"
 end
 

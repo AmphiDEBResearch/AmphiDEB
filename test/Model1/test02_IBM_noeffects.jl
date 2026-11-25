@@ -25,7 +25,7 @@ begin
     p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
 
     p.spc.H_p = 50.  # maturity at puberty
-    p.spc.aux.tau_R = Truncated(Normal(365., 36.5), 0, Inf) # reproduction period
+    p.spc.aux.tau_R = truncated(Normal(365., 36.5), 0, Inf) # reproduction period
     p.spc.aux.h_S = 0.1 # hazard rate caused by loss of structure
     p.spc.aux.S_rel_crit = 0.5
     p.spc.K_X_lrv = 100.

@@ -1,4 +1,5 @@
 using AmphiDEB.Model2
+
 @testset "test default parameters" begin
     alg = Tsit5()
 

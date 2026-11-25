@@ -104,6 +104,14 @@ function get_Ri(spc::ComponentVector)
     return spc.eta_AR * ((1 - spc.kappa_juv) * A_max - dJ_max)
 end
 
+function get_Ww_max_lrv(spc::ComponentVector)
+
+    Wd_max = get_Smax_lrv(spc)
+    Ww_max = get_Ww(Wd_max, spc.watercontent_larvae)
+    
+    return Ww_max
+end
+
 function get_Ww_max_ad(spc::ComponentVector)
 
     Wd_max = get_Smax_ad(spc)
@@ -113,7 +121,7 @@ function get_Ww_max_ad(spc::ComponentVector)
 end
 
 
-function get_dI_max_lrv(Ww_max, kappa, eta_IA, k_M, watercontent)
+function get_dI_max(Ww_max, kappa, eta_IA, k_M, watercontent)
 
     S_max = (1 - watercontent) * Ww_max
 
@@ -126,7 +134,13 @@ function get_dI_max_lrv(Ww_max, kappa, eta_IA, k_M, watercontent)
     return dI_max
 end
 
-function get_dI_max_lrv(Ww_max, spc)
+"""
+    get_dI_max_lrv(Ww_max, spc)    
+
+Obtain maximum larval size-specific ingestion rate 
+implied by maximum wet weight and remaining fixed parameters.
+"""
+function get_dI_max_from_Ww_lrv(Ww_max, spc)
 
     kappa = spc.kappa_juv 
     eta_IA = spc.eta_IA
@@ -139,11 +153,9 @@ function get_dI_max_lrv(Ww_max, spc)
     return dI_max
 end
 
-function get_dI_max_juv(Ww_max, spc)
+function get_dI_max_from_Ww_juv(Ww_max, spc)
 
-    kappa = spc.kappa_juv 
-    eta_IA = spc.eta_IA
-    k_M = spc.k_M_juv 
+
     watercontent = spc.watercontent_juveniles
 
     S_max = (1 - watercontent) * Ww_max
@@ -151,6 +163,26 @@ function get_dI_max_juv(Ww_max, spc)
     # S_max = ((spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb)^3
     # S_max^1/3 = (spc.kappa_emb * spc.eta_IA * spc.dI_max_lrv)/spc.k_M_emb
     # S_max^1/3 * k_M = kappa eta_IA * dI_max
+
+    dI_max = get_dI_max_from_Smax_lrv(S_max, spc)
+
+    return dI_max
+end
+
+function get_dI_max_from_Smax_lrv(S_max, spc)
+    
+    kappa = spc.kappa_juv 
+    eta_IA = spc.eta_IA
+    k_M = spc.k_M_juv 
+
+    dI_max = get_dI_max_from_Smax(S_max, kappa, eta_IA, k_M)
+
+    
+    return dI_max
+
+end
+
+function get_dI_max_from_Smax(S_max, kappa, eta_IA, k_M)
 
     dI_max = (S_max^(1/3) * k_M) / (kappa * eta_IA)
 

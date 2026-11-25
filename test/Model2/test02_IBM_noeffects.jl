@@ -1,15 +1,8 @@
-occursin("AmphiDEB.jl", pwd()) || cd("./lib/AmphiDEB.jl")
-include("../boilerplate.jl")
-
-using AmphiDEB.Model1
+using AmphiDEB.Model2
 using AmphiDEB.EcotoxSystems.IBM
 
-Model1.defaultparams()
-
-# FIXME: why is N_emb, N_lrv...not updated correctly?
-
 begin
-    global p = Model1.defaultparams()
+    p = Model2.defaultparams()
 
 
     # these settings are not realistic - only for testing purposes
@@ -25,7 +18,7 @@ begin
     p.spc.Z = truncated(Normal(1, 0.1), 0, Inf)
 
     p.spc.H_p = 50.  # maturity at puberty
-    p.spc.aux.tau_R = Truncated(Normal(365., 36.5), 0, Inf) # reproduction period
+    p.spc.aux.tau_R = truncated(Normal(365., 36.5), 0, Inf) # reproduction period
     p.spc.aux.h_S = 0.1 # hazard rate caused by loss of structure
     p.spc.aux.S_rel_crit = 0.5
     p.spc.K_X_lrv = 100.
@@ -33,15 +26,15 @@ begin
 
     @time sim = IBM.simulate(
         p; 
-        global_ode! = Model1.food_dynamics_firstorder!,
-        individual_ode! = Model1.individual_ODE!,
+        global_ode! = Model2.food_dynamics_firstorder!,
+        individual_ode! = Model2.individual_ODE!,
 
-        global_rules! = Model1.global_rules!,
-        individual_rules! = Model1.individual_rules!,
+        global_rules! = Model2.global_rules!,
+        individual_rules! = Model2.individual_rules!,
 
-        init_u_glb = Model1.initialize_global_statevars,
-        init_u_ind = Model1.initialize_individual_statevars,
-        gen_p_ind = Model1.generate_individual_params,
+        init_u_glb = Model2.initialize_global_statevars,
+        init_u_ind = Model2.initialize_individual_statevars,
+        gen_p_ind = Model2.generate_individual_params,
 
         N0 = 100,
         record_individuals = false, 
@@ -73,6 +66,7 @@ begin
     #@transform! sim.spc :fX = map(x->x.fX, :aux)
     #@df @subset(sim.spc, :juvenile .== 1) lineplot(:t, :fX)
 end
+
 
 
 #@testset "Example simulation with IBM" begin
