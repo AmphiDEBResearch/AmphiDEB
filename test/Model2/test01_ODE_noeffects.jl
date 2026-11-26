@@ -74,6 +74,32 @@ using AmphiDEB.Model2
     @test sim_ad.E_mt[end] == sim_mt.E_mt[end]
 end
 
+@testset "get_dI_max" begin
+    
+    
+    p = Model2.defaultparams()
+
+    p.glb.food_dynamic = 0.
+    p.spc.H_p = 55.
+
+    # we can ignore water content for this test
+    p.spc.watercontent_larvae = 0.
+
+    S_max1 = Model2.get_S_max_lrv(p.spc)
+    dI_max = Model2.get_dI_max_from_Ww_lrv(S_max, p.spc)
+    S_max2 = Model2.get_Smax_lrv(p.spc)
+
+    @test S_max1 == S_max2
+
+    sim_emb = Model2.sim_embryo(p.spc)
+
+    S_max1 = Model2.get_S_max_juv(p.spc)
+    dI_max = Model2.get_dI_max_from_Ww_juv(S_max, p.spc)
+    S_max2 = Model2.get_Smax_juv(p.spc)
+
+    @test S_max1 == S_max2
+end
+
 
 #@testset "Randomized parameters" begin
 #    
